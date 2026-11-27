@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite dev --host 0.0.0.0 --port 5173",
     "build": "vite build",
-    "start": "node build/index.js",
+    "start": "node server.js",
     "preview": "vite preview --host 0.0.0.0",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "smoke": "node scripts/smoke.mjs",

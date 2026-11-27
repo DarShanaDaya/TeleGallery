@@ -35,11 +35,73 @@ npm run dev               # http://localhost:5173
 
 Without a bot token the app runs in **demo storage mode**: you can sign in with the *Try the demo account* button and everything (upload, preview, trash, search) works against local disk. This is the fastest way to click through the UI.
 
-### Production
+### Docker (recommended)
+
+```bash
+cp .env.example .env      # fill in the Telegram values you need
+docker compose up -d --build
+```
+
+The app is then on <http://localhost:3000>. State lives in the `teledrive-data`
+volume at `/data` (SQLite database + blob cache); the container runs as the
+unprivileged `node` user and has a healthcheck on `/api/health`.
+
+Plain Docker, without Compose:
+
+```bash
+docker build -t teledrive .
+docker run -d --name teledrive \
+  -p 3000:3000 \
+  -v teledrive-data:/data \
+  --env-file .env \
+  --restart unless-stopped \
+  teledrive
+docker logs -f teledrive
+```
+
+**Image layout.** Three stages: a `deps` stage with `python3/make/g++` (needed
+only if `better-sqlite3` has no prebuilt binary for the platform), a `build`
+stage that runs `npm run build` and prunes dev dependencies, and a slim runtime
+stage that copies only `build/`, `node_modules/`, `package.json`, `server.js`
+and `healthcheck.js`. The toolchain never reaches the runtime image.
+
+**Why Debian slim, not Alpine.** `better-sqlite3` is a native module. Alpine's
+musl libc has no prebuilt binaries, so the image would have to compile it on
+every build and carry the compiler into the runtime layer to stay upgradeable.
+Bookworm ships glibc and gets the prebuild.
+
+**Runtime behaviour.**
+
+| Setting | Default | Notes |
+|---|---|---|
+| `PORT` | `3000` | Port the server binds inside the container. |
+| `HOST` | `0.0.0.0` | Must be `0.0.0.0` in a container, not `127.0.0.1`. |
+| `DATA_DIR` | `/data` | Mount a volume here or all state is lost on `docker rm`. |
+| `ORIGIN` | – | Set to your public URL when behind a TLS proxy. |
+
+`server.js` handles `SIGTERM`/`SIGINT` by draining open connections (up to 20s)
+before exiting, so `docker stop` doesn't truncate an in-flight upload.
+
+**Behind a reverse proxy.** Terminate TLS at the proxy and pass `ORIGIN=https://drive.example.com`, then remember to run `/setdomain` in BotFather for the same host — the Telegram login widget refuses a mismatch.
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    client_max_body_size 0;      # uploads are chunked, but don't cap them
+    proxy_request_buffering off; # stream chunks straight through
+    proxy_read_timeout 300s;
+}
+```
+
+### Without Docker
 
 ```bash
 npm run build
-node build/index.js       # PORT / HOST and .env are respected
+node server.js            # PORT / HOST and .env are respected
 ```
 
 ## Connecting Telegram

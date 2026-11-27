@@ -8,7 +8,7 @@ import { invalidateAll } from '$app/navigation';
 	let { data } = $props();
 	let copied = $state('');
 
-	let sessions = $state(data.sessions || []);
+	let sessions = $state([]);
 	let busySession = $state('');
 
 	$effect(() => {
