@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { upsertUser, createSession, SESSION_COOKIE } from '#lib/server/auth.js';
+import { upsertUser, createSession, SESSION_COOKIE, rememberAccount } from '#lib/server/auth.js';
 import { json } from '#lib/server/http.js';
 import { ALLOW_DEMO_LOGIN } from '#lib/server/config.js';
 
@@ -24,6 +24,7 @@ export async function POST(event) {
 		userAgent: event.request.headers.get('user-agent'),
 		ip: event.getClientAddress?.() ?? null
 	});
+	rememberAccount(event, id);
 	event.cookies.set(SESSION_COOKIE, id, {
 		path: '/',
 		httpOnly: true,

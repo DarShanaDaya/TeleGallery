@@ -1,11 +1,10 @@
-import { upsertUser, createSession, SESSION_COOKIE } from '#lib/server/auth.js';
+import { upsertUser, createSession, SESSION_COOKIE, rememberAccount } from '#lib/server/auth.js';
 import { verifyTelegramAuth } from '#lib/server/telegram.js';
 import { record } from '#lib/server/audit.js';
 import { json } from '#lib/server/http.js';
 import { telegramLoginEnabled } from '#lib/server/config.js';
 
 function signIn(event, tgUser) {
-	event.cookies.delete(SESSION_COOKIE, { path: '/' });
 	const userId = upsertUser({
 		tgId: tgUser.id,
 		username: tgUser.username ?? null,
@@ -24,6 +23,7 @@ function signIn(event, tgUser) {
 		userAgent: event.request.headers.get('user-agent'),
 		ip: event.getClientAddress?.() ?? null
 	});
+	rememberAccount(event, id);
 	event.cookies.set(SESSION_COOKIE, id, {
 		path: '/',
 		httpOnly: true,
@@ -49,7 +49,9 @@ export async function GET(event) {
 	const verified = verifyTelegramAuth(params);
 	if (!verified) return redirectTo('/login', '?error=invalid_signature');
 	signIn(event, verified);
-	return redirectTo('/drive');
+	const next = event.cookies.get('tg_login_next');
+	event.cookies.delete('tg_login_next', { path: '/' });
+	return redirectTo(next && next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') ? next : '/drive');
 }
 
 /** Same flow for Mini Apps / custom buttons that POST the signed payload as JSON. */

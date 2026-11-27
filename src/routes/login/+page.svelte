@@ -23,7 +23,7 @@
 		try {
 			const res = await fetch('/api/auth/demo', { method: 'POST' });
 			if (!res.ok) throw new Error('The demo account is unavailable right now.');
-			location.href = '/drive';
+			location.href = data.next;
 		} catch (e) {
 			error = e.message;
 			busy = false;

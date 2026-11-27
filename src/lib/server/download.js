@@ -38,7 +38,8 @@ export async function streamFile(event, fileRow, { inline = false } = {}) {
 		'content-type': mime,
 		'content-length': String(total === 0 ? 0 : end - start + 1),
 		'accept-ranges': 'bytes',
-		'cache-control': 'private, max-age=3600',
+		'cache-control': 'private, no-store',
+		'content-security-policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'",
 		'content-disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${filename}`,
 		'x-content-type-options': 'nosniff'
 	});

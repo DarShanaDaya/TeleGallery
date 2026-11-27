@@ -150,3 +150,22 @@ export function upsertUser({ tgId, username, firstName, lastName, photoUrl, lang
 }
 
 export { crypto };
+
+const ACCOUNTS_COOKIE = 'tg_accounts';
+function savedIds(event) {
+	try { const ids = JSON.parse(event.cookies.get(ACCOUNTS_COOKIE) || '[]'); return Array.isArray(ids) ? ids.filter((id) => typeof id === 'string' && /^[a-f0-9]{64}$/.test(id)).slice(0, 10) : []; } catch { return []; }
+}
+function saveIds(event, ids) {
+	event.cookies.set(ACCOUNTS_COOKIE, JSON.stringify(ids.slice(0, 10)), { path: '/', httpOnly: true, sameSite: 'lax', secure: event.url.protocol === 'https:', maxAge: MAX_AGE });
+}
+export function rememberAccount(event, id) {
+	const old = event.cookies.get(SESSION_COOKIE);
+	const ids = [id, old, ...savedIds(event)].filter(Boolean);
+	const seen = new Set();
+	saveIds(event, ids.filter((sid) => { const user = getSessionUser(sid); if (!user || seen.has(user.id)) return false; seen.add(user.id); return true; }));
+}
+export function browserAccounts(event) {
+	const current = event.cookies.get(SESSION_COOKIE);
+	return [...new Set([current, ...savedIds(event)].filter(Boolean))].map((id) => ({ id, user: getSessionUser(id) })).filter((a) => a.user);
+}
+export function forgetAccount(event, id) { saveIds(event, savedIds(event).filter((sid) => sid !== id)); }

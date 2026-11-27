@@ -6,8 +6,8 @@ import { streamFile } from '#lib/server/download.js';
  * the token is the capability. Ranges and HEAD work exactly as on the private route.
  */
 async function handle(event, { countView = false } = {}) {
-	const file = resolveShare(event.params.token);
-	if (!file) return new Response('This link is no longer available.', { status: 404 });
+	const file = resolveShare(event.params.token, event.locals.user?.id, event.url.searchParams.get('item'));
+	if (!file || file.kind !== 'file') return new Response('This link is no longer available.', { status: 404 });
 	if (countView) {
 		const share = shareById(event.params.token);
 		if (share) countShareView(share.id);
