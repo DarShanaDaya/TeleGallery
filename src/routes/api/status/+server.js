@@ -1,6 +1,6 @@
-import { json } from '$lib/server/http.js';
-import { BOT_USERNAME, telegramEnabled, telegramLoginEnabled, STORAGE_CHAT_ID } from '$lib/server/config.js';
-import { getMe } from '$lib/server/telegram.js';
+import { json } from '#lib/server/http.js';
+import { BOT_USERNAME, telegramEnabled, telegramLoginEnabled, STORAGE_CHAT_ID } from '#lib/server/config.js';
+import { getMe } from '#lib/server/telegram.js';
 
 /** Small health/config probe used by the UI banner and by deploy checks. */
 export async function GET() {

@@ -1,5 +1,5 @@
-import { json, requireUser } from '$lib/server/http.js';
-import { emptyTrash, listTrash } from '$lib/server/files.js';
+import { json, requireUser } from '#lib/server/http.js';
+import { emptyTrash, listTrash } from '#lib/server/files.js';
 
 export async function GET(event) {
 	const { user, error } = requireUser(event);

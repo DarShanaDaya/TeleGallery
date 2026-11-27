@@ -1,6 +1,6 @@
 <script>
-	import { drive, api } from '$lib/drive.svelte.js';
-	import { toasts } from '$lib/toast.svelte.js';
+	import { drive, api } from '#lib/drive.svelte.js';
+	import { toasts } from '#lib/toast.svelte.js';
 	import { Folder, ChevronRight, X, LoaderCircle, ArrowUp } from 'lucide-svelte';
 
 	let current = $state(null);
@@ -52,7 +52,7 @@
 				method: 'PATCH',
 				body: JSON.stringify({ action: 'move', parentId: current })
 			});
-			toasts.success(`Moved "${file.name}"`);
+			toasts.success(`Moved “${file.name}”`);
 			drive.move = null;
 			drive.refresh();
 		} catch (err) {
@@ -64,46 +64,61 @@
 </script>
 
 {#if file}
-	<div class="fixed inset-0 z-[70] grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
-		<div class="fade-up w-full max-w-md rounded-2xl border border-white/10 bg-[#0b1220] p-6 shadow-2xl">
-			<div class="flex items-start justify-between">
-				<div>
-					<h2 class="text-base font-semibold text-white">Move “{file.name}”</h2>
-					<p class="mt-1 text-xs text-slate-500">Choose a destination folder</p>
+	<div
+		class="fixed inset-0 z-[70] grid place-items-center bg-ink/25 p-4 backdrop-blur-[2px]"
+		role="presentation"
+		onclick={() => (drive.move = null)}
+	>
+		<div
+			class="rise w-full max-w-md border border-rule bg-paper-2 shadow-[0_30px_70px_-40px_rgba(25,23,18,0.6)]"
+			onclick={(e) => e.stopPropagation()}
+			role="presentation"
+		>
+			<div class="flex items-start justify-between border-b border-rule px-5 py-3">
+				<div class="min-w-0">
+					<h2 class="truncate font-display text-lg text-ink">Move “{file.name}”</h2>
+					<p class="label mt-0.5">Choose a destination</p>
 				</div>
-				<button class="icon-btn h-8 w-8" onclick={() => (drive.move = null)}><X size={14} /></button>
+				<button class="icon-btn h-7 w-7" onclick={() => (drive.move = null)}><X size={13} /></button>
 			</div>
 
-			<div class="mt-4 flex items-center gap-1 text-xs text-slate-400">
-				{#if trail.length > 1}
-					<button class="icon-btn h-6 w-6" onclick={goUp}><ArrowUp size={12} /></button>
-				{/if}
-				<span class="truncate">{trail.map((t) => t.name).join(' / ')}</span>
+			<div class="px-5 py-4">
+				<div class="flex items-center gap-2">
+					{#if trail.length > 1}
+						<button class="icon-btn h-6 w-6" onclick={goUp} title="Up one level"><ArrowUp size={12} /></button>
+					{/if}
+					<p class="truncate font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3">
+						{trail.map((t) => t.name).join(' / ')}
+					</p>
+				</div>
+
+				<div class="mt-2.5 h-52 overflow-y-auto border border-rule">
+					{#if loading}
+						<div class="grid h-full place-items-center text-ink-3">
+							<LoaderCircle size={16} class="animate-[spin_1s_linear_infinite]" />
+						</div>
+					{:else if !folders.length}
+						<div class="grid h-full place-items-center px-4 text-center text-[12px] text-ink-3">
+							No subfolders here — move into this level instead.
+						</div>
+					{:else}
+						{#each folders as folder (folder.id)}
+							<button
+								class="flex w-full items-center gap-2.5 border-b border-rule px-3 py-2 text-left text-[13px] text-ink-2 transition-colors last:border-0 hover:bg-paper-3 hover:text-ink"
+								onclick={() => enter(folder)}
+							>
+								<Folder size={13} strokeWidth={1.6} class="text-ink-3" />
+								<span class="flex-1 truncate">{folder.name}</span>
+								<ChevronRight size={12} class="text-ink-3" />
+							</button>
+						{/each}
+					{/if}
+				</div>
 			</div>
 
-			<div class="mt-2 h-56 overflow-y-auto rounded-xl border border-white/10 bg-[#070d18] p-1.5">
-				{#if loading}
-					<div class="grid h-full place-items-center text-slate-500"><LoaderCircle class="animate-spin" size={18} /></div>
-				{:else if !folders.length}
-					<div class="grid h-full place-items-center text-xs text-slate-600">No subfolders here</div>
-				{:else}
-					{#each folders as folder (folder.id)}
-						<button
-							class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
-							ondblclick={() => enter(folder)}
-							onclick={() => enter(folder)}
-						>
-							<Folder size={15} class="text-amber-300" />
-							<span class="flex-1 truncate">{folder.name}</span>
-							<ChevronRight size={13} class="text-slate-600" />
-						</button>
-					{/each}
-				{/if}
-			</div>
-
-			<div class="mt-5 flex justify-end gap-2">
-				<button class="btn-ghost" onclick={() => (drive.move = null)}>Cancel</button>
-				<button class="btn-primary" onclick={move} disabled={busy || loading}>Move here</button>
+			<div class="flex justify-end gap-2 border-t border-rule px-5 py-3">
+				<button class="btn btn-quiet" onclick={() => (drive.move = null)}>Cancel</button>
+				<button class="btn btn-primary" onclick={move} disabled={busy || loading}>Move here</button>
 			</div>
 		</div>
 	</div>

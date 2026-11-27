@@ -1,4 +1,4 @@
-import { getSessionUser, SESSION_COOKIE } from '$lib/server/auth.js';
+import { getSessionUser, SESSION_COOKIE } from '#lib/server/auth.js';
 
 const PROTECTED = ['/drive'];
 

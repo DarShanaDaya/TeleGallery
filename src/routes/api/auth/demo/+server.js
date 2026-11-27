@@ -1,6 +1,6 @@
-import { upsertUser, createSession, SESSION_COOKIE } from '$lib/server/auth.js';
-import { json } from '$lib/server/http.js';
-import { ALLOW_DEMO_LOGIN } from '$lib/server/config.js';
+import { upsertUser, createSession, SESSION_COOKIE } from '#lib/server/auth.js';
+import { json } from '#lib/server/http.js';
+import { ALLOW_DEMO_LOGIN } from '#lib/server/config.js';
 
 /**
  * Demo sign-in used when no bot token is configured yet, so the whole product can be

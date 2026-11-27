@@ -1,4 +1,4 @@
-import { breadcrumbs, getFile, listFolder } from '$lib/server/files.js';
+import { breadcrumbs, getFile, listFolder } from '#lib/server/files.js';
 
 export function load({ locals, url }) {
 	const parentId = url.searchParams.get('folder') || null;

@@ -1,4 +1,4 @@
-import { search } from '$lib/server/files.js';
+import { search } from '#lib/server/files.js';
 
 export function load({ locals, url }) {
 	const q = url.searchParams.get('q') || '';

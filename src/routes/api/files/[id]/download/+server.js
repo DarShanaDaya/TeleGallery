@@ -1,6 +1,6 @@
-import { json, requireUser } from '$lib/server/http.js';
-import { db } from '$lib/server/db.js';
-import { streamFile } from '$lib/server/download.js';
+import { json, requireUser } from '#lib/server/http.js';
+import { db } from '#lib/server/db.js';
+import { streamFile } from '#lib/server/download.js';
 
 export async function GET(event) {
 	const { user, error } = requireUser(event);

@@ -1,7 +1,7 @@
-import { upsertUser, createSession, SESSION_COOKIE } from '$lib/server/auth.js';
-import { verifyTelegramAuth } from '$lib/server/telegram.js';
-import { json } from '$lib/server/http.js';
-import { telegramLoginEnabled } from '$lib/server/config.js';
+import { upsertUser, createSession, SESSION_COOKIE } from '#lib/server/auth.js';
+import { verifyTelegramAuth } from '#lib/server/telegram.js';
+import { json } from '#lib/server/http.js';
+import { telegramLoginEnabled } from '#lib/server/config.js';
 
 function signIn(event, tgUser) {
 	event.cookies.delete(SESSION_COOKIE, { path: '/' });

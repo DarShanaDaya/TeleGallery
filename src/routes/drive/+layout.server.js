@@ -1,5 +1,5 @@
-import { usage } from '$lib/server/files.js';
-import { telegramLoginEnabled } from '$lib/server/config.js';
+import { usage } from '#lib/server/files.js';
+import { telegramLoginEnabled } from '#lib/server/config.js';
 
 export function load({ locals }) {
 	return {

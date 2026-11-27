@@ -8,7 +8,6 @@ export default defineConfig({
 		tailwindcss(),
 		sveltekit({
 			adapter: adapter(),
-			alias: { $lib: 'src/lib' },
 			csrf: { trustedOrigins: ['*'] }
 		})
 	],

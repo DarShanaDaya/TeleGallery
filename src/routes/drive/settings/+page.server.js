@@ -1,4 +1,4 @@
-import { BOT_USERNAME, STORAGE_CHAT_ID, telegramEnabled, telegramLoginEnabled, SITE_NAME } from '$lib/server/config.js';
+import { BOT_USERNAME, STORAGE_CHAT_ID, telegramEnabled, telegramLoginEnabled, SITE_NAME } from '#lib/server/config.js';
 
 export function load({ locals }) {
 	return {

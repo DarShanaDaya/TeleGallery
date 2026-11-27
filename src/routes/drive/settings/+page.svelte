@@ -1,30 +1,33 @@
 <script>
-	import Topbar from '$lib/components/Topbar.svelte';
-	import { formatBytes } from '$lib/format.js';
-	import { page } from '$app/state';
-	import { ShieldCheck, Bot, HardDrive, LogOut, Send, CircleAlert, Copy } from 'lucide-svelte';
-	import { toasts } from '$lib/toast.svelte.js';
+	import Topbar from '#lib/components/Topbar.svelte';
+	import { formatBytes } from '#lib/format.js';
+	import { toasts } from '#lib/toast.svelte.js';
+	import { LogOut, Copy, Send, ArrowUpRight } from 'lucide-svelte';
 
 	let { data } = $props();
-	let copied = $state(false);
+	let copied = $state('');
+
 	const user = $derived(data.user);
 	const usage = $derived(data.usage);
 	const s = $derived(data.settings);
 
 	const kindRows = $derived([
-		{ label: 'Images', key: 'image', color: 'bg-emerald-400' },
-		{ label: 'Video', key: 'video', color: 'bg-rose-400' },
-		{ label: 'Audio', key: 'audio', color: 'bg-violet-400' },
-		{ label: 'Documents', key: 'document', color: 'bg-sky-400' },
-		{ label: 'Other', key: 'other', color: 'bg-slate-400' }
+		{ label: 'Images', key: 'image' },
+		{ label: 'Video', key: 'video' },
+		{ label: 'Audio', key: 'audio' },
+		{ label: 'Documents', key: 'document' },
+		{ label: 'Other', key: 'other' }
 	]);
 	const maxKind = $derived(Math.max(1, ...kindRows.map((r) => usage.marked?.[r.key] || 0)));
+	const name = $derived(
+		[user.firstName, user.lastName].filter(Boolean).join(' ') || user.username || 'Telegram user'
+	);
 
-	async function copy(text) {
+	async function copy(text, key) {
 		await navigator.clipboard.writeText(text);
-		copied = true;
+		copied = key;
 		toasts.success('Copied');
-		setTimeout(() => (copied = false), 1500);
+		setTimeout(() => (copied = ''), 1500);
 	}
 
 	async function logout() {
@@ -33,123 +36,118 @@
 	}
 </script>
 
-<Topbar {data} title="Settings" showUpload={false} />
-<div class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
-	<div class="mx-auto max-w-3xl space-y-5">
+<Topbar {data} title="Settings" subtitle="Account, storage, connection" showUpload={false} />
+
+<div class="flex-1 overflow-y-auto">
+	<div class="mx-auto max-w-3xl px-4 py-6 sm:px-6">
 		<!-- account -->
-		<section class="card p-6">
-			<h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">Account</h2>
+		<section class="border-t border-rule pt-4">
+			<div class="flex items-center justify-between">
+				<span class="label">01 — Account</span>
+				<button class="btn btn-quiet text-[11px]" onclick={logout}><LogOut size={12} /> Log out</button>
+			</div>
 			<div class="mt-4 flex items-center gap-4">
 				{#if user.photoUrl}
-					<img src={user.photoUrl} alt="" class="h-14 w-14 rounded-2xl object-cover" />
+					<img src={user.photoUrl} alt="" class="h-12 w-12 border border-rule object-cover grayscale" />
 				{:else}
-					<span class="grid h-14 w-14 place-items-center rounded-2xl bg-brand-500/20 text-lg font-bold text-brand-200">
+					<span class="grid h-12 w-12 place-items-center border border-rule-strong bg-paper-2 font-mono text-sm text-ink-2">
 						{(user.firstName?.[0] || 'T').toUpperCase()}
 					</span>
 				{/if}
 				<div class="min-w-0">
-					<p class="truncate text-base font-semibold text-white">
-						{[user.firstName, user.lastName].filter(Boolean).join(' ') || user.username || 'Telegram user'}
-					</p>
-					<p class="text-xs text-slate-500">
-						{user.username ? '@' + user.username : user.isDemo ? 'Demo account' : 'Telegram account'}
+					<p class="truncate font-display text-2xl leading-tight text-ink">{name}</p>
+					<p class="label mt-1">
+						{user.username ? '@' + user.username : user.isDemo ? 'demo account' : 'telegram account'}
 					</p>
 				</div>
-				<button class="btn-ghost ml-auto h-9 px-3 text-xs" onclick={logout}><LogOut size={14} /> Log out</button>
 			</div>
 		</section>
 
 		<!-- storage -->
-		<section class="card p-6">
+		<section class="mt-10 border-t border-rule pt-4">
 			<div class="flex items-center justify-between">
-				<h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">Storage</h2>
-				<span class="chip"><HardDrive size={12} /> Unlimited</span>
-			</div>
-			<div class="mt-4 grid gap-3 sm:grid-cols-3">
-				<div class="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-					<p class="text-xl font-bold text-white">{formatBytes(usage.bytes)}</p>
-					<p class="text-[11px] text-slate-500">{usage.files} files</p>
-				</div>
-				<div class="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-					<p class="text-xl font-bold text-white">{usage.folders}</p>
-					<p class="text-[11px] text-slate-500">folders</p>
-				</div>
-				<div class="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-					<p class="text-xl font-bold text-white">{formatBytes(usage.trashBytes)}</p>
-					<p class="text-[11px] text-slate-500">{usage.trashFiles} in trash</p>
-				</div>
+				<span class="label">02 — Storage</span>
+				<span class="tag">unlimited</span>
 			</div>
 
-			<div class="mt-5 space-y-2.5">
-				{#each kindRows as row (row.key)}
-					<div class="flex items-center gap-3 text-xs">
-						<span class="w-20 text-slate-400">{row.label}</span>
-						<div class="h-2 flex-1 overflow-hidden rounded-full bg-white/5">
-							<div class="h-full rounded-full {row.color}" style="width:{Math.round(((usage.marked?.[row.key] || 0) / maxKind) * 100)}%"></div>
-						</div>
-						<span class="w-16 text-right text-slate-500">{formatBytes(usage.marked?.[row.key] || 0)}</span>
+			<dl class="mt-4 grid gap-px border border-rule bg-rule sm:grid-cols-3">
+				{#each [{ k: 'Used', v: formatBytes(usage.bytes) }, { k: 'Files', v: usage.files }, { k: 'In trash', v: formatBytes(usage.trashBytes) }] as tile}
+					<div class="bg-paper-2 px-4 py-3.5">
+						<dt class="label">{tile.k}</dt>
+						<dd class="mt-1 font-display text-2xl leading-none text-ink">{tile.v}</dd>
 					</div>
 				{/each}
+			</dl>
+
+			<div class="mt-5">
+				<span class="label">By type</span>
+				<div class="mt-2 border-t border-rule">
+					{#each kindRows as row (row.key)}
+						<div class="flex items-center gap-3 border-b border-rule py-2">
+							<span class="w-20 font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">{row.label}</span>
+							<div class="h-1.5 flex-1 bg-paper-3">
+								<div
+									class="h-full bg-ink-2"
+									style="width:{Math.round(((usage.marked?.[row.key] || 0) / maxKind) * 100)}%"
+								></div>
+							</div>
+							<span class="w-16 text-right font-mono text-[10px] text-ink-3">
+								{formatBytes(usage.marked?.[row.key] || 0)}
+							</span>
+						</div>
+					{/each}
+				</div>
 			</div>
 		</section>
 
 		<!-- telegram -->
-		<section class="card p-6">
-			<h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">Telegram connection</h2>
-			<div class="mt-4 space-y-3 text-sm">
-				<div class="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-					<span class="flex items-center gap-2.5 text-slate-300"><Bot size={16} class="text-brand-400" /> Bot</span>
-					<span class="flex items-center gap-2 text-xs text-slate-400">
-						{s.botUsername ? '@' + s.botUsername : 'not configured'}
-						{#if s.botUsername}
-							<button class="text-slate-500 hover:text-white" onclick={() => copy('@' + s.botUsername)}><Copy size={12} /></button>
-						{/if}
-					</span>
-				</div>
-				<div class="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-					<span class="flex items-center gap-2.5 text-slate-300"><ShieldCheck size={16} class="text-emerald-400" /> Storage target</span>
-					<span class="text-xs text-slate-400">{s.storageChat ? s.storageChat : 'your own Telegram account'}</span>
-				</div>
-				<div class="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-					<span class="flex items-center gap-2.5 text-slate-300"><HardDrive size={16} class="text-sky-400" /> Mode</span>
-					<span class="text-xs text-slate-400">{s.telegramEnabled ? 'Telegram storage' : 'Local demo storage'}</span>
-				</div>
-			</div>
+		<section class="mt-10 border-t border-rule pt-4">
+			<span class="label">03 — Telegram connection</span>
+			<dl class="mt-3 border-t border-rule">
+				{#each [{ k: 'Bot', v: s.botUsername ? '@' + s.botUsername : 'not configured', copyable: s.botUsername }, { k: 'Storage chat', v: s.storageChat || 'your own account with the bot' }, { k: 'Mode', v: s.telegramEnabled ? 'telegram storage' : 'local demo storage' }] as row}
+					<div class="flex items-center justify-between gap-4 border-b border-rule py-2.5">
+						<dt class="label">{row.k}</dt>
+						<dd class="flex items-center gap-2 font-mono text-[11px] text-ink-2">
+							{row.v}
+							{#if row.copyable}
+								<button class="text-ink-3 transition-colors hover:text-ink" onclick={() => copy(row.v, row.k)}>
+									<Copy size={11} />
+								</button>
+							{/if}
+						</dd>
+					</div>
+				{/each}
+			</dl>
 
 			{#if !s.telegramEnabled}
-				<div class="mt-4 flex gap-3 rounded-xl border border-amber-400/25 bg-amber-400/10 p-4 text-xs leading-relaxed text-amber-200/90">
-					<CircleAlert size={16} class="mt-0.5 shrink-0" />
-					<div>
-						<p class="font-semibold">Telegram isn't connected yet.</p>
-						<p class="mt-1">
-							Add <code class="rounded bg-black/30 px-1">TELEGRAM_BOT_TOKEN</code>,
-							<code class="rounded bg-black/30 px-1">TELEGRAM_BOT_USERNAME</code> and
-							<code class="rounded bg-black/30 px-1">TELEGRAM_STORAGE_CHAT_ID</code> to your
-							<code class="rounded bg-black/30 px-1">.env</code> file, then restart the server. Files uploaded
-							now are stored locally.
-						</p>
-					</div>
+				<div class="mt-4 border-l-2 border-warn bg-paper-2 px-4 py-3">
+					<p class="label text-warn">Not connected</p>
+					<p class="mt-1.5 text-[12.5px] leading-6 text-ink-2">
+						Add <code class="border border-rule bg-paper-3 px-1 font-mono text-[11px]">TELEGRAM_BOT_TOKEN</code>,
+						<code class="border border-rule bg-paper-3 px-1 font-mono text-[11px]">TELEGRAM_BOT_USERNAME</code> and
+						<code class="border border-rule bg-paper-3 px-1 font-mono text-[11px]">TELEGRAM_STORAGE_CHAT_ID</code>
+						to <code class="border border-rule bg-paper-3 px-1 font-mono text-[11px]">.env</code> and restart.
+						Uploads are currently kept on local disk.
+					</p>
 				</div>
 			{:else if s.botUsername}
-				<a
-					class="btn-ghost mt-4 w-full"
-					href="https://t.me/{s.botUsername}"
-					target="_blank"
-					rel="noreferrer"
-				>
-					<Send size={15} /> Open the bot in Telegram
+				<a class="btn btn-ghost mt-4" href="https://t.me/{s.botUsername}" target="_blank" rel="noreferrer">
+					<Send size={13} /> Open the bot in Telegram
+					<ArrowUpRight size={13} />
 				</a>
 			{/if}
 		</section>
 
 		<!-- about -->
-		<section class="card p-6">
-			<h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">About</h2>
-			<p class="mt-3 text-xs leading-relaxed text-slate-500">
-				{s.siteName} stores your files as documents inside your own Telegram chat. Uploads are split into chunks,
-				and downloads are streamed back on demand. Nothing is shared with third parties.
+		<section class="mt-10 border-t border-rule pt-4">
+			<span class="label">04 — About</span>
+			<p class="mt-3 max-w-[38rem] text-[12.5px] leading-6 text-ink-2">
+				{s.siteName} writes each file to your Telegram chat as one or more documents and keeps only an index —
+				chat id, message id, file id — in SQLite. Downloads are reassembled on demand and cached once.
 			</p>
-			<p class="mt-3 text-[11px] text-slate-600">Session expires in 30 days · Built with SvelteKit &amp; Node.js</p>
+			<p class="mt-3 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3">
+				Node · SvelteKit · SQLite · 30-day sessions
+			</p>
 		</section>
 	</div>
 </div>

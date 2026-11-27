@@ -1,5 +1,5 @@
-import { json, requireUser } from '$lib/server/http.js';
-import { receiveChunk } from '$lib/server/upload.js';
+import { json, requireUser } from '#lib/server/http.js';
+import { receiveChunk } from '#lib/server/upload.js';
 
 export async function POST(event) {
 	const { user, error } = requireUser(event);

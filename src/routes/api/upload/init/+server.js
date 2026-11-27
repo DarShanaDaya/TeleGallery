@@ -1,6 +1,6 @@
-import { json, requireUser, safeJson } from '$lib/server/http.js';
-import { initUpload } from '$lib/server/files.js';
-import { MAX_CHUNK_BYTES, MAX_BYTES } from '$lib/server/upload.js';
+import { json, requireUser, safeJson } from '#lib/server/http.js';
+import { initUpload } from '#lib/server/files.js';
+import { MAX_CHUNK_BYTES, MAX_BYTES } from '#lib/server/upload.js';
 
 export async function POST(event) {
 	const { user, error } = requireUser(event);

@@ -2,6 +2,8 @@
 
 A clean-room clone of [drive.kriztech.in](https://drive.kriztech.in/) built with **Node.js**, **SvelteKit**, **Svelte 5**, **Tailwind CSS 4** and **SQLite**. Users log in with their Telegram account and their files are stored as documents inside Telegram itself — so the drive really is unlimited.
 
+The interface follows what is loosely called the **Fable 5.2** design direction: warm paper-and-ink neutrals, hairline rules instead of stacked cards, a high-contrast serif for display type, Inter for UI copy and mono for data and labels, with colour reserved for meaning (action, danger, status) and a separately tuned dark theme rather than an inverted light one.
+
 ```
 Landing page  →  Login with Telegram  →  File manager  →  Files live in Telegram
 ```
@@ -17,6 +19,7 @@ Landing page  →  Login with Telegram  →  File manager  →  Files live in Te
 | **Preview** | Images, video, audio and PDFs preview inline. |
 | **Dashboard** | Storage usage, per-type breakdown, Telegram connection status, drag-and-drop uploads with live progress. |
 | **Demo mode** | Works — and stores files locally — before you even create a bot. |
+| **Two palettes** | Light "paper" and a hand-tuned "ink" dark theme, toggled in the UI and remembered. Set before first paint, so no flash. |
 
 ## Quick start
 
@@ -70,6 +73,23 @@ node build/index.js       # PORT / HOST and .env are respected
 | `ALLOW_DEMO_LOGIN` | `true` | Show the demo sign-in button. Set to `false` when going live. |
 | `MAX_FILE_SIZE` | 4 GiB | Largest accepted upload. |
 | `TELEGRAM_CHUNK_SIZE` | 45 MB | Chunk size for Telegram documents. |
+
+## Design system
+
+Tokens live in `src/app.css`; every colour is a CSS variable mapped through Tailwind's `@theme inline`, so both palettes share one set of utility names (`bg-paper-2`, `text-ink-2`, `border-rule`).
+
+| Token | Light "paper" | Dark "ink" | Used for |
+|---|---|---|---|
+| `--paper` | `#f5f2ea` | `#13120e` | page canvas |
+| `--paper-2` | `#fffdf7` | `#1a1914` | panels, cards |
+| `--ink` | `#191712` | `#f2ede1` | headings, primary text |
+| `--ink-2` | `#4d4739` | `#c4bdad` | body copy |
+| `--ink-3` | `#857e6e` | `#8b8475` | metadata, labels |
+| `--rule` | 14% ink | 15% ink | hairline dividers |
+| `--accent` | `#1e46c8` | `#89a4ff` | links, active states |
+| `--danger` / `--success` / `--warn` | rust / forest / ochre | softened equivalents | meaning only |
+
+Type: **Instrument Serif** (display), **Inter** (UI), **JetBrains Mono** (labels and data). Motion is CSS-only and disabled under `prefers-reduced-motion`.
 
 ## How it works
 

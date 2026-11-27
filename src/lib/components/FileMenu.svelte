@@ -1,19 +1,9 @@
 <script>
-	import { drive, api } from '$lib/drive.svelte.js';
-	import { toasts } from '$lib/toast.svelte.js';
-	import {
-		Download,
-		PencilLine,
-		Star,
-		StarOff,
-		FolderInput,
-		Trash2,
-		RotateCcw,
-		Trash,
-		Eye
-	} from 'lucide-svelte';
+	import { drive, api } from '#lib/drive.svelte.js';
+	import { toasts } from '#lib/toast.svelte.js';
+	import { Download, PencilLine, Star, StarOff, FolderInput, Trash2, RotateCcw, Trash, Eye } from 'lucide-svelte';
 
-	let { file, onClose, anchor = 'right' } = $props();
+	let { file, onClose } = $props();
 
 	const isTrash = $derived(Boolean(file.deletedAt));
 
@@ -55,37 +45,38 @@
 </script>
 
 <div
-	class="absolute {anchor === 'right' ? 'right-0' : 'left-0'} top-full z-40 mt-1 w-52 overflow-hidden rounded-xl border border-white/10 bg-[#0e1626] p-1.5 shadow-2xl shadow-black/60"
+	class="absolute right-1 top-full z-40 mt-1 w-48 border border-rule bg-paper-2 py-1 shadow-[0_18px_40px_-24px_rgba(25,23,18,0.55)]"
 	role="menu"
 >
 	{#if !isTrash}
 		{#if file.kind === 'file'}
 			<button class="menu-item" role="menuitem" onclick={() => (onClose?.(), drive.openPreview(file))}>
-				<Eye size={15} /> Preview
+				<Eye size={13} /> Preview
 			</button>
 			<a class="menu-item" role="menuitem" href={`/api/files/${file.id}/download`}>
-				<Download size={15} /> Download
+				<Download size={13} /> Download
 			</a>
 		{/if}
 		<button class="menu-item" role="menuitem" onclick={() => (onClose?.(), drive.rename(file))}>
-			<PencilLine size={15} /> Rename
+			<PencilLine size={13} /> Rename
 		</button>
 		<button class="menu-item" role="menuitem" onclick={() => (onClose?.(), drive.openMove(file))}>
-			<FolderInput size={15} /> Move to
+			<FolderInput size={13} /> Move to…
 		</button>
 		<button class="menu-item" role="menuitem" onclick={star}>
-			{#if file.starred}<StarOff size={15} /> Remove star{:else}<Star size={15} /> Add star{/if}
+			{#if file.starred}<StarOff size={13} /> Unstar{:else}<Star size={13} /> Star{/if}
 		</button>
-		<div class="my-1 h-px bg-white/5"></div>
+		<div class="my-1 h-px bg-rule"></div>
 		<button class="menu-item menu-danger" role="menuitem" onclick={trash}>
-			<Trash2 size={15} /> Move to trash
+			<Trash2 size={13} /> Move to trash
 		</button>
 	{:else}
 		<button class="menu-item" role="menuitem" onclick={restore}>
-			<RotateCcw size={15} /> Restore
+			<RotateCcw size={13} /> Restore
 		</button>
+		<div class="my-1 h-px bg-rule"></div>
 		<button class="menu-item menu-danger" role="menuitem" onclick={destroy}>
-			<Trash size={15} /> Delete forever
+			<Trash size={13} /> Delete forever
 		</button>
 	{/if}
 </div>
@@ -95,23 +86,24 @@
 		display: flex;
 		width: 100%;
 		align-items: center;
-		gap: 0.625rem;
-		border-radius: 0.5rem;
-		padding: 0.5rem 0.625rem;
-		font-size: 0.8125rem;
-		color: #cbd5e1;
-		transition: background 0.12s ease, color 0.12s ease;
+		gap: 0.5rem;
+		padding: 0.4rem 0.65rem;
+		font-size: 12.5px;
+		color: var(--ink-2);
 		text-align: left;
+		transition:
+			background-color 0.12s ease,
+			color 0.12s ease;
 	}
 	.menu-item:hover {
-		background: rgba(255, 255, 255, 0.06);
-		color: #fff;
+		background: var(--paper-3);
+		color: var(--ink);
 	}
 	.menu-danger {
-		color: #fda4af;
+		color: var(--danger);
 	}
 	.menu-danger:hover {
-		background: rgba(244, 63, 94, 0.12);
-		color: #ffe4e6;
+		background: color-mix(in oklab, var(--danger) 9%, transparent);
+		color: var(--danger);
 	}
 </style>

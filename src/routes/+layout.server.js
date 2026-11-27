@@ -1,4 +1,4 @@
-import { BOT_USERNAME, ALLOW_DEMO_LOGIN, SITE_NAME, telegramLoginEnabled } from '$lib/server/config.js';
+import { BOT_USERNAME, ALLOW_DEMO_LOGIN, SITE_NAME, telegramLoginEnabled } from '#lib/server/config.js';
 
 export function load({ locals }) {
 	return {

@@ -1,4 +1,4 @@
-import { deleteSession, SESSION_COOKIE } from '$lib/server/auth.js';
+import { deleteSession, SESSION_COOKIE } from '#lib/server/auth.js';
 
 export async function POST(event) {
 	deleteSession(event.cookies.get(SESSION_COOKIE));

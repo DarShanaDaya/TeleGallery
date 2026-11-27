@@ -1,5 +1,5 @@
-import { json, requireUser, safeJson } from '$lib/server/http.js';
-import { getFile, moveFile, purgeFile, renameFile, restoreFile, toggleStar, trashFile } from '$lib/server/files.js';
+import { json, requireUser, safeJson } from '#lib/server/http.js';
+import { getFile, moveFile, purgeFile, renameFile, restoreFile, toggleStar, trashFile } from '#lib/server/files.js';
 
 export async function GET(event) {
 	const { user, error } = requireUser(event);

@@ -11,7 +11,7 @@
 		script.async = true;
 		script.setAttribute('data-telegram-login', botUsername);
 		script.setAttribute('data-size', 'large');
-		script.setAttribute('data-radius', '12');
+		script.setAttribute('data-radius', '4');
 		script.setAttribute('data-userpic', 'true');
 		script.setAttribute('data-request-access', 'write');
 		script.setAttribute('data-auth-url', authUrl);
@@ -19,14 +19,18 @@
 	});
 </script>
 
-<div class="flex min-h-[52px] items-center justify-center">
+<div class="flex min-h-[48px] items-center justify-center">
 	{#if enabled && botUsername}
 		<div bind:this={container}></div>
 	{:else}
-		<div class="w-full rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-center text-xs leading-relaxed text-amber-200/90">
-			Telegram login isn't configured yet. Add <code class="rounded bg-black/30 px-1">TELEGRAM_BOT_TOKEN</code> and
-			<code class="rounded bg-black/30 px-1">TELEGRAM_BOT_USERNAME</code> to <code class="rounded bg-black/30 px-1">.env</code>
-			to enable the official Telegram widget. See <code class="rounded bg-black/30 px-1">README.md</code>.
+		<div class="w-full border border-rule border-dashed px-4 py-3.5">
+			<p class="font-mono text-[10px] uppercase tracking-[0.14em] text-warn">Not configured</p>
+			<p class="mt-2 text-[12px] leading-6 text-ink-2">
+				Add <code class="border border-rule bg-paper-3 px-1 font-mono text-[11px]">TELEGRAM_BOT_TOKEN</code> and
+				<code class="border border-rule bg-paper-3 px-1 font-mono text-[11px]">TELEGRAM_BOT_USERNAME</code> to
+				<code class="border border-rule bg-paper-3 px-1 font-mono text-[11px]">.env</code> to show the official
+				Telegram widget.
+			</p>
 		</div>
 	{/if}
 </div>
