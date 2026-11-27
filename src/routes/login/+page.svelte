@@ -14,15 +14,15 @@
 	});
 
 	const messages = {
-		invalid_signature: 'Telegram rejected the signature. Please try again.',
-		telegram_not_configured: 'Telegram login is not configured on this server yet.'
+		invalid_signature: 'Telegram could not verify that sign-in. Please try again.',
+		telegram_not_configured: 'Telegram sign-in is not set up on this server yet.'
 	};
 
 	async function demoLogin() {
 		busy = true;
 		try {
 			const res = await fetch('/api/auth/demo', { method: 'POST' });
-			if (!res.ok) throw new Error('Demo login unavailable');
+			if (!res.ok) throw new Error('The demo account is unavailable right now.');
 			location.href = '/drive';
 		} catch (e) {
 			error = e.message;
@@ -33,91 +33,87 @@
 
 <div class="min-h-screen">
 	<header class="border-b border-rule">
-		<div class="mx-auto flex h-14 w-full max-w-[76rem] items-center justify-between px-5 sm:px-8">
-			<a href="/" class="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-ink-3 transition-colors hover:text-ink">
-				<ArrowLeft size={13} strokeWidth={1.8} /> Back
+		<div class="mx-auto flex h-16 w-full max-w-[68rem] items-center justify-between px-5 sm:px-8">
+			<a href="/" class="flex items-center gap-2 text-[13px] text-ink-2 transition-colors hover:text-ink">
+				<ArrowLeft size={14} strokeWidth={2} /> Back
 			</a>
-			<Logo />
+			<Logo size={28} textClass="text-[1.15rem]" />
 			<ThemeToggle />
 		</div>
 	</header>
 
-	<main class="mx-auto grid w-full max-w-[76rem] gap-0 px-5 sm:px-8 lg:grid-cols-[1fr_0.9fr]">
-		<!-- left: the argument -->
-		<section class="border-rule py-12 lg:border-r lg:py-20 lg:pr-16">
-			<span class="label">Authentication</span>
-			<h1 class="display mt-5 text-[clamp(2.6rem,5vw,4rem)] text-ink">
-				Your private cloud,<br /><em class="italic">already</em> in your pocket.
-			</h1>
-			<p class="mt-6 max-w-[30rem] text-[14px] leading-7 text-ink-2">
-				Sign in with the Telegram account you already own. We never see a password, and your files never leave
-				the chat you keep with your bot.
+	<main class="mx-auto grid w-full max-w-[68rem] items-start gap-0 px-5 sm:px-8 lg:grid-cols-[1fr_26rem]">
+		<section class="max-w-[32rem] py-14 lg:py-20 lg:pr-14">
+			<h1 class="display text-[clamp(2.3rem,4.6vw,3.3rem)] text-ink">Welcome back.</h1>
+			<p class="mt-5 text-[15px] leading-[1.7] text-ink-2">
+				Sign in with the Telegram account that will hold your files. There is nothing to register and no
+				password to choose — Telegram vouches for who you are, and we keep the session.
 			</p>
 
-			<dl class="mt-10 max-w-[30rem] border-t border-rule">
-				{#each [['Identity', 'Telegram-signed payload, HMAC-SHA256 verified'], ['Session', 'httpOnly cookie, 30 days, server-side'], ['Storage', 'Your own account — unlimited by design']] as [k, v]}
-					<div class="flex items-start justify-between gap-6 border-b border-rule py-3.5">
-						<dt class="label pt-0.5">{k}</dt>
-						<dd class="max-w-[18rem] text-right text-[12.5px] leading-6 text-ink-2">{v}</dd>
-					</div>
-				{/each}
-			</dl>
-		</section>
-
-		<!-- right: the card -->
-		<section class="flex items-center py-12 lg:py-20 lg:pl-16">
-			<div class="rise w-full max-w-[25rem]">
-				<div class="border border-rule bg-paper-2">
-					<div class="flex items-center justify-between border-b border-rule px-5 py-3">
-						<h2 class="font-display text-xl text-ink">Welcome back</h2>
-						<span class="tag">Step 1 of 1</span>
-					</div>
-
-					<div class="px-5 py-6">
-						{#if error}
-							<p class="mb-5 border-l-2 border-danger bg-danger/8 px-3 py-2 text-[12.5px] leading-6 text-danger">
-								{messages[error] || error}
-							</p>
-						{/if}
-
-						<p class="label">Continue with Telegram</p>
-						<div class="mt-3">
-							<TelegramLogin
-								enabled={data.telegramLoginEnabled}
-								botUsername={data.botUsername}
-								authUrl={`${page.url.origin}/api/auth/telegram`}
-							/>
-						</div>
-
-						{#if data.demoLogin}
-							<div class="my-6 flex items-center gap-3">
-								<span class="h-px flex-1 bg-rule"></span>
-								<span class="label">or</span>
-								<span class="h-px flex-1 bg-rule"></span>
-							</div>
-							<button class="btn btn-ghost w-full py-2.5" onclick={demoLogin} disabled={busy}>
-								{#if busy}
-									<LoaderCircle size={14} class="animate-[spin_1s_linear_infinite]" /> Signing in…
-								{:else}
-									Try the demo account
-								{/if}
-							</button>
-							<p class="mt-3 text-center text-[11px] leading-5 text-ink-3">
-								Explores the full drive with local storage — no bot token needed.
-							</p>
-						{/if}
-					</div>
-
-					<p class="border-t border-rule px-5 py-3 text-[11px] leading-5 text-ink-3">
-						By continuing you agree to the Terms of Service &amp; Privacy Policy. Session data is stored in
-						your own database.
+			<div class="mt-9 space-y-4 border-t border-rule pt-7">
+				<div class="flex gap-4">
+					<span class="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent/12 text-[11px] font-semibold text-accent num">1</span>
+					<p class="text-[13.5px] leading-[1.7] text-ink-2">
+						Telegram sends us your name and id, signed with the bot token, so we know the payload is genuine.
 					</p>
 				</div>
-
-				<p class="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">
-					{data.siteName} · Node + SvelteKit
-				</p>
+				<div class="flex gap-4">
+					<span class="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent/12 text-[11px] font-semibold text-accent num">2</span>
+					<p class="text-[13.5px] leading-[1.7] text-ink-2">
+						We create a session for this browser. Sign in on your phone as well and both stay active, listed
+						under Settings.
+					</p>
+				</div>
+				<div class="flex gap-4">
+					<span class="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent/12 text-[11px] font-semibold text-accent num">3</span>
+					<p class="text-[13.5px] leading-[1.7] text-ink-2">
+						Your files go to a chat with your bot. Nothing is copied to a server of ours.
+					</p>
+				</div>
 			</div>
+		</section>
+
+		<section class="w-full pb-16 lg:pt-20">
+			<div class="card p-6">
+				<h2 class="display text-[1.35rem] text-ink">Sign in</h2>
+				<p class="mt-1 text-[12.5px] text-ink-3">Use the Telegram account that should own this drive.</p>
+
+				{#if error}
+					<p class="mt-5 rounded-[10px] border-l-2 border-danger bg-danger/8 px-3 py-2.5 text-[12.5px] leading-relaxed text-danger">
+						{messages[error] || error}
+					</p>
+				{/if}
+
+				<div class="mt-6">
+					<TelegramLogin
+						enabled={data.telegramLoginEnabled}
+						botUsername={data.botUsername}
+						authUrl={`${page.url.origin}/api/auth/telegram`}
+					/>
+				</div>
+
+				{#if data.demoLogin}
+					<div class="my-5 flex items-center gap-3">
+						<span class="h-px flex-1 bg-rule"></span>
+						<span class="text-[11.5px] text-ink-3">or</span>
+						<span class="h-px flex-1 bg-rule"></span>
+					</div>
+					<button class="btn btn-ghost w-full py-2.5" onclick={demoLogin} disabled={busy}>
+						{#if busy}
+							<LoaderCircle size={14} class="animate-spin" /> Signing in…
+						{:else}
+							Try it with a demo account
+						{/if}
+					</button>
+					<p class="mt-2.5 text-center text-[11.5px] leading-relaxed text-ink-3">
+						Gets its own empty drive, stored on this server.
+					</p>
+				{/if}
+			</div>
+
+			<p class="mt-4 text-center text-[11.5px] leading-relaxed text-ink-3">
+				By continuing you agree to the terms of service and privacy policy.
+			</p>
 		</section>
 	</main>
 </div>

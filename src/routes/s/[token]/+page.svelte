@@ -40,9 +40,9 @@
 		{:else}
 			<div class="flex flex-wrap items-end justify-between gap-4 border-b border-rule pb-4">
 				<div class="min-w-0">
-					<p class="label">Shared file</p>
+					<p class="text-[11.5px] font-medium text-ink-3">Shared file</p>
 					<h1 class="mt-1.5 truncate font-display text-3xl leading-tight text-ink">{file.name}</h1>
-					<p class="label mt-1.5">
+					<p class="text-[11.5px] text-ink-3 mt-1.5">
 						{formatBytes(file.size)} · {formatDate(file.createdAt)}
 						{#if data.expiresAt}· link expires {formatDate(data.expiresAt)}{/if}
 					</p>
@@ -86,7 +86,7 @@
 					></iframe>
 				{:else}
 					<div class="border border-rule bg-paper-2 px-6 py-12 text-center">
-						<p class="label">No inline preview</p>
+						<p class="text-[11.5px] font-medium text-ink-3">No inline preview</p>
 						<p class="mx-auto mt-2 max-w-[24rem] text-[13px] leading-6 text-ink-2">
 							This file type can’t be shown in the browser. Use the download button above.
 						</p>
@@ -94,7 +94,7 @@
 				{/if}
 			</div>
 
-			<p class="mt-6 flex items-center justify-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-3">
+			<p class="mt-6 flex items-center justify-center gap-1.5 text-[11px] text-ink-3">
 				<Lock size={10} /> Streamed from the owner’s Telegram storage
 			</p>
 		{/if}

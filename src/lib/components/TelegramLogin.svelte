@@ -24,11 +24,11 @@
 		<div bind:this={container}></div>
 	{:else}
 		<div class="w-full border border-rule border-dashed px-4 py-3.5">
-			<p class="font-mono text-[10px] uppercase tracking-[0.14em] text-warn">Not configured</p>
+			<p class="text-[11px] text-warn">Not configured</p>
 			<p class="mt-2 text-[12px] leading-6 text-ink-2">
-				Add <code class="border border-rule bg-paper-3 px-1 font-mono text-[11px]">TELEGRAM_BOT_TOKEN</code> and
-				<code class="border border-rule bg-paper-3 px-1 font-mono text-[11px]">TELEGRAM_BOT_USERNAME</code> to
-				<code class="border border-rule bg-paper-3 px-1 font-mono text-[11px]">.env</code> to show the official
+				Add <code class="border border-rule bg-paper-3 px-1 text-[11.5px]">TELEGRAM_BOT_TOKEN</code> and
+				<code class="border border-rule bg-paper-3 px-1 text-[11.5px]">TELEGRAM_BOT_USERNAME</code> to
+				<code class="border border-rule bg-paper-3 px-1 text-[11.5px]">.env</code> to show the official
 				Telegram widget.
 			</p>
 		</div>

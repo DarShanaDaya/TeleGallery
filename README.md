@@ -142,20 +142,39 @@ node server.js            # PORT / HOST and .env are respected
 
 ## Design system
 
-Tokens live in `src/app.css`; every colour is a CSS variable mapped through Tailwind's `@theme inline`, so both palettes share one set of utility names (`bg-paper-2`, `text-ink-2`, `border-rule`).
+Built against the `frontend-design` brief: a distinctive point of view rather than a
+default template. The full plan, including the self-critique pass, is in
+[`docs/design.md`](docs/design.md).
 
-| Token | Light "paper" | Dark "ink" | Used for |
+**The idea.** Files in TeleDrive are not in a folder tree — they are documents
+threaded through a Telegram chat, and a large file is several of them stitched back
+together. So the one memorable device is a **seam**: a single dashed thread running
+down the file list, with each file's glyph on it. It encodes the product instead of
+decorating the page, and everything around it is deliberately quiet.
+
+**Colour.** Cool mist canvas, petrol ink, one teal accent.
+
+| Token | Light | Dark | Role |
 |---|---|---|---|
-| `--paper` | `#f5f2ea` | `#13120e` | page canvas |
-| `--paper-2` | `#fffdf7` | `#1a1914` | panels, cards |
-| `--ink` | `#191712` | `#f2ede1` | headings, primary text |
-| `--ink-2` | `#4d4739` | `#c4bdad` | body copy |
-| `--ink-3` | `#857e6e` | `#8b8475` | metadata, labels |
-| `--rule` | 14% ink | 15% ink | hairline dividers |
-| `--accent` | `#1e46c8` | `#89a4ff` | links, active states |
-| `--danger` / `--success` / `--warn` | rust / forest / ochre | softened equivalents | meaning only |
+| `--mist` | `#e9eeea` | `#101b1d` | page canvas |
+| `--shell` | `#fcfdfc` | `#16262a` | panels, rows |
+| `--ink` | `#13211f` | `#e8efec` | primary text |
+| `--slate` | `#5c6e69` | `#9bb0ab` | secondary text |
+| `--thread` | `#0f7c7b` | `#5ad1c8` | actions, active, the seam |
+| `--wine` | `#a63d53` | `#e08a9b` | destructive only |
 
-Type: **Instrument Serif** (display), **Inter** (UI), **JetBrains Mono** (labels and data). Motion is CSS-only and disabled under `prefers-reduced-motion`.
+**Type.** Bricolage Grotesque for display (its slightly irregular terminals keep it
+from reading as a default grotesque), Instrument Sans for UI at 11–15px. Both are
+variable fonts loaded from Google Fonts. No monospace, no all-caps labels.
+
+**Deliberately absent**, because they are the tells of a generated page: tracked
+ALL-CAPS eyebrows, `01 / 02 / 03` markers outside genuinely sequential content,
+`A · B · C` meta strings, arrows appended to buttons, identical rounded cards for
+every block, and a serif italic on one word of a headline. The previous revision of
+this UI had four of those; the critique in `docs/design.md` records what was cut.
+
+Motion is one orchestrated moment — the seam draws down once — and disabled under
+`prefers-reduced-motion`.
 
 ## How it works
 

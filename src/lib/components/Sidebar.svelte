@@ -33,89 +33,70 @@
 	);
 </script>
 
-<aside
-	class="hidden w-[248px] shrink-0 flex-col border-r border-rule bg-paper-2/40 lg:flex"
->
-	<div class="flex h-14 items-center justify-between border-b border-rule px-4">
-		<a href="/drive"><Logo size={28} textClass="text-lg" /></a>
+<aside class="hidden w-[240px] shrink-0 flex-col border-r border-rule bg-paper-2/60 lg:flex">
+	<div class="flex h-16 items-center justify-between px-4">
+		<a href="/drive"><Logo size={27} textClass="text-[1.12rem]" /></a>
 		<ThemeToggle compact />
 	</div>
 
-	<div class="px-4 pt-4">
-		<button class="btn btn-ghost w-full justify-start gap-2 py-2" onclick={() => onNewFolder?.()}>
-			<Plus size={14} strokeWidth={1.8} /> New folder
+	<div class="px-3">
+		<button class="btn btn-primary w-full py-2" onclick={() => onNewFolder?.()}>
+			<Plus size={14} strokeWidth={2.2} /> New folder
 		</button>
 	</div>
 
-	<nav class="mt-5 px-2">
-		<p class="label px-2 pb-2">Library</p>
-		<div class="border-t border-rule">
+	<nav class="mt-6 flex-1 px-3">
+		<p class="px-2 pb-2 text-[11.5px] font-medium text-ink-3">Library</p>
+		<div class="space-y-0.5">
 			{#each nav as item}
 				<a
 					href={item.href}
-					class="group flex items-center gap-2.5 border-b border-rule px-2 py-2.5 text-[13px] transition-colors {isActive(
-						item.href
+					class="flex items-center gap-2.5 rounded-[9px] px-2 py-2 text-[13px] font-medium transition-colors {isActive( item.href
 					)
-						? 'bg-paper-3 text-ink'
-						: 'text-ink-2 hover:bg-paper-3/60 hover:text-ink'}"
+						? 'bg-accent/12 text-accent'
+						: 'text-ink-2 hover:bg-paper-3 hover:text-ink'}"
 				>
-					<item.icon
-						size={15}
-						strokeWidth={1.6}
-						class={isActive(item.href) ? 'text-accent' : 'text-ink-3 group-hover:text-ink-2'}
-					/>
-					<span class="flex-1">{item.label}</span>
-					{#if isActive(item.href)}
-						<span class="h-3 w-px bg-accent"></span>
-					{/if}
+					<item.icon size={15} strokeWidth={1.9} />
+					{item.label}
 				</a>
 			{/each}
 		</div>
-	</nav>
 
-	<!-- usage ledger -->
-	<div class="mt-6 px-4">
-		<p class="label pb-2">Usage</p>
-		<div class="border border-rule bg-paper-2 p-3">
+		<div class="mt-7 rounded-[10px] bg-paper-3 px-3 py-3">
 			<div class="flex items-baseline justify-between">
-				<span class="font-display text-2xl leading-none text-ink">{formatBytes(data.usage.bytes)}</span>
-				<span class="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3">unlimited</span>
+				<span class="display text-[1.25rem] leading-none text-ink num">{formatBytes(data.usage.bytes)}</span>
+				<span class="text-[11px] text-ink-3">used</span>
 			</div>
-			<div class="mt-2.5 h-1 w-full bg-paper-3">
-				<div class="h-full bg-accent" style="width:12%"></div>
-			</div>
-			<p class="mt-2 font-mono text-[10px] leading-4 text-ink-3">
-				{data.usage.files} files · {data.usage.folders} folders
+			<p class="mt-2 text-[11.5px] leading-relaxed text-ink-3">
+				{data.usage.files} files and {data.usage.folders} folders. There is no ceiling to show a bar against.
 			</p>
 		</div>
-	</div>
+	</nav>
 
 	<div class="mt-auto">
 		<a
 			href="/drive/settings"
-			class="flex items-center gap-2.5 border-t border-rule px-4 py-2.5 text-[12px] text-ink-2 transition-colors hover:bg-paper-3/60 hover:text-ink"
+			class="flex items-center gap-2.5 px-4 py-2.5 text-[12.5px] text-ink-2 transition-colors hover:bg-paper-3 hover:text-ink"
 		>
-			<Settings size={14} strokeWidth={1.6} class="text-ink-3" />
+			<Settings size={14} strokeWidth={1.9} />
 			Settings
-			<span class="ml-auto flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-ink-3">
+			<span class="ml-auto flex items-center gap-1.5 text-[11px] text-ink-3">
 				<span class="h-1.5 w-1.5 rounded-full {data.telegramConnected ? 'bg-success' : 'bg-warn'}"></span>
-				{data.telegramConnected ? 'live' : 'demo'}
+				{data.telegramConnected ? 'Telegram' : 'Demo'}
 			</span>
 		</a>
 
 		<div class="flex items-center gap-2.5 border-t border-rule px-4 py-3">
 			{#if user.photoUrl}
-				<img src={user.photoUrl} alt="" class="h-7 w-7 rounded-full object-cover grayscale" />
+				<img src={user.photoUrl} alt="" class="h-7 w-7 rounded-full object-cover" />
 			{:else}
-				<span class="grid h-7 w-7 place-items-center rounded-full border border-rule-strong font-mono text-[10px] text-ink-2">
+				<span class="grid h-7 w-7 place-items-center rounded-full bg-accent/15 text-[11px] font-semibold text-accent">
 					{initials}
 				</span>
 			{/if}
 			<div class="min-w-0 flex-1">
-				<p class="truncate text-[12px] font-medium text-ink">{name}</p>
-				<p class="truncate font-mono text-[10px] text-ink-3">
-					{user.username ? '@' + user.username : 'telegram'}
-				</p>
+				<p class="truncate text-[12.5px] font-medium text-ink">{name}</p>
+				<p class="truncate text-[11px] text-ink-3">{user.username ? '@' + user.username : 'Telegram'}</p>
 			</div>
 			<button class="icon-btn h-7 w-7" title="Log out" onclick={logout}><LogOut size={13} /></button>
 		</div>

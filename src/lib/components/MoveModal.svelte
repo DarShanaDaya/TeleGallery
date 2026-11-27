@@ -77,7 +77,7 @@
 			<div class="flex items-start justify-between border-b border-rule px-5 py-3">
 				<div class="min-w-0">
 					<h2 class="truncate font-display text-lg text-ink">Move “{file.name}”</h2>
-					<p class="label mt-0.5">Choose a destination</p>
+					<p class="mt-0.5 text-[11.5px] text-ink-3">Choose a destination</p>
 				</div>
 				<button class="icon-btn h-7 w-7" onclick={() => (drive.move = null)}><X size={13} /></button>
 			</div>
@@ -87,7 +87,7 @@
 					{#if trail.length > 1}
 						<button class="icon-btn h-6 w-6" onclick={goUp} title="Up one level"><ArrowUp size={12} /></button>
 					{/if}
-					<p class="truncate font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3">
+					<p class="truncate text-[11px] text-ink-3">
 						{trail.map((t) => t.name).join(' / ')}
 					</p>
 				</div>

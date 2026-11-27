@@ -37,7 +37,7 @@
 			<header class="flex items-center justify-between gap-4 border-b border-rule px-4 py-2.5">
 				<div class="min-w-0">
 					<h3 class="truncate text-[13px] font-medium text-ink">{file.name}</h3>
-					<p class="label mt-0.5">
+					<p class="mt-0.5 text-[11.5px] text-ink-3">
 						{formatBytes(file.size)} · {formatDate(file.createdAt)} ·
 						{file.storage === 'telegram' ? 'telegram' : 'local'}
 					</p>
@@ -70,7 +70,7 @@
 					<iframe {src} title={file.name} class="h-full w-full max-w-4xl border border-rule bg-white"></iframe>
 				{:else}
 					<div class="border border-rule bg-paper-2 p-8 text-center">
-						<p class="label">No preview</p>
+						<p class="text-[11.5px] font-medium text-ink-3">No preview</p>
 						<p class="mt-2 max-w-[18rem] text-[13px] leading-6 text-ink-2">
 							This file type can’t be rendered in the browser.
 						</p>

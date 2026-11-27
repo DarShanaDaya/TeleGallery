@@ -79,7 +79,7 @@
 			<div class="flex items-start justify-between border-b border-rule px-5 py-3">
 				<div class="min-w-0">
 					<h2 class="truncate font-display text-lg text-ink">Share “{file.name}”</h2>
-					<p class="label mt-0.5">Anyone with the link can download</p>
+					<p class="mt-0.5 text-[11.5px] text-ink-3">Anyone with the link can download</p>
 				</div>
 				<button class="icon-btn h-7 w-7" onclick={() => (drive.share = null)}><X size={13} /></button>
 			</div>
@@ -87,7 +87,7 @@
 			<div class="border-b border-rule px-5 py-4">
 				<div class="flex flex-wrap items-end gap-2">
 					<label class="flex-1">
-						<span class="label">Expires</span>
+						<span class="text-[11.5px] font-medium text-ink-3">Expires</span>
 						<select class="input mt-1.5 h-9" bind:value={days}>
 							<option value={0}>Never</option>
 							<option value={1}>In 1 day</option>
@@ -119,8 +119,8 @@
 					{#each links as link (link.id)}
 						<div class="flex items-center gap-2 border-b border-rule px-5 py-2.5 last:border-0">
 							<div class="min-w-0 flex-1">
-								<p class="truncate font-mono text-[11px] text-ink-2">{absolute(link.url)}</p>
-								<p class="label mt-0.5">
+								<p class="truncate text-[11.5px] text-ink-2">{absolute(link.url)}</p>
+								<p class="mt-0.5 text-[11.5px] text-ink-3">
 									{#if !link.active}
 										<span class="text-danger">expired</span>
 									{:else if link.expiresAt}

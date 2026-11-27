@@ -85,17 +85,17 @@
 		{#each data.crumbs as crumb, i}
 			{#if i > 0}<ChevronRight size={11} class="text-ink-3/60" />{/if}
 			{#if i === data.crumbs.length - 1}
-				<span class="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-2">{crumb.name}</span>
+				<span class="text-[11px] text-ink-2">{crumb.name}</span>
 			{:else}
 				<a
 					href={crumb.id ? `/drive?folder=${crumb.id}` : '/drive'}
-					class="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3 transition-colors hover:text-ink"
+					class="text-[11px] text-ink-3 transition-colors hover:text-ink"
 				>
 					{crumb.name}
 				</a>
 			{/if}
 		{/each}
-		<span class="ml-auto hidden font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3 sm:block">
+		<span class="ml-auto hidden text-[11px] text-ink-3 sm:block">
 			{view} view
 		</span>
 	</div>
@@ -103,7 +103,7 @@
 	<div class="px-4 py-5 sm:px-6">
 		{#if data.notFound}
 			<div class="border border-rule bg-paper-2 px-6 py-12 text-center">
-				<p class="label">404</p>
+				<p class="text-[11.5px] font-medium text-ink-3">404</p>
 				<p class="mt-2 text-[13px] text-ink-2">This folder no longer exists.</p>
 				<a href="/drive" class="btn btn-ghost mt-5">Back to My Drive</a>
 			</div>
@@ -123,7 +123,7 @@
 						><FolderPlus size={13} /> New folder</button
 					>
 				</div>
-				<p class="mt-6 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-3">
+				<p class="mt-6 text-[11px] text-ink-3">
 					Unlimited · private · chunked at 45 MB
 				</p>
 			</div>
@@ -138,7 +138,7 @@
 		<div class="rise border border-rule-strong bg-paper-2 px-12 py-10 text-center shadow-[0_30px_70px_-40px_rgba(25,23,18,0.6)]">
 			<CornerDownRight size={22} class="mx-auto mb-3 text-accent" strokeWidth={1.4} />
 			<p class="font-display text-2xl text-ink">Drop to upload</p>
-			<p class="label mt-2">Files go to your Telegram chat</p>
+			<p class="text-[11.5px] text-ink-3 mt-2">Files go to your Telegram chat</p>
 		</div>
 	</div>
 {/if}

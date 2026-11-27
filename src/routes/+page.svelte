@@ -2,300 +2,254 @@
 	import Logo from '#lib/components/Logo.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import { formatBytes } from '#lib/format.js';
-	import { ArrowUpRight, Plus, Minus, ArrowRight } from 'lucide-svelte';
+	import { ArrowRight, ShieldCheck, Infinity as InfinityMark } from 'lucide-svelte';
 
 	let { data } = $props();
 
-	const stats = [
-		{ k: 'Storage ceiling', v: '∞', note: 'no tiers, no metering' },
-		{ k: 'Cost per month', v: '0', note: 'you already pay for Telegram' },
-		{ k: 'Chunk size', v: '45 MB', note: 'reassembled on download' },
-		{ k: 'Session', v: '30 d', note: 'httpOnly, server-side' }
+	// Real numbers, not invented ones — these describe how the thing works.
+	const facts = [
+		{ figure: '∞', label: 'Storage ceiling', note: 'the limit is your Telegram account, not a plan' },
+		{ figure: '45 MB', label: 'Chunk size', note: 'each slice becomes one Telegram document' },
+		{ figure: '2 GB', label: 'Largest file', note: '4 GB on a Premium account' },
+		{ figure: '0', label: 'Files on our servers', note: 'chunks are streamed through, never kept' }
 	];
 
-	const rows = [
+	const steps = [
 		{
-			n: '01',
-			title: 'Sign in, don’t sign up',
-			body: 'The Telegram widget hands us a signed payload. We verify the HMAC against your bot token, mint a session, and that is the whole account system. No email, no password, no verification loop.',
-			meta: 'auth'
+			title: 'You sign in with Telegram',
+			body: 'One tap. Telegram hands us a signed payload, we check the signature, and that is your account. There is no password to make up or lose.'
 		},
 		{
-			n: '02',
-			title: 'Uploads become documents',
-			body: 'A file is cut into 45 MB chunks, each sent to your private storage chat as a Telegram document. The index — chat id, message id, file id — lives in one SQLite table.',
-			meta: 'write'
+			title: 'Files go into your chat',
+			body: 'An upload is cut into 45 MB pieces and sent to your private storage chat as documents. We keep only the message references — the file itself is Telegram’s problem now.'
 		},
 		{
-			n: '03',
-			title: 'Downloads are stitched on the fly',
-			body: 'Chunks are pulled in order, cached to disk once, and streamed back with Range support. Video seeks. Large files resume. Nothing is ever stored in full on the server.',
-			meta: 'read'
+			title: 'Downloads are stitched as you watch',
+			body: 'When you open or download something, the pieces are pulled in order and streamed straight to you. Video seeks work, because the server answers range requests piece by piece.'
 		}
 	];
 
-	const faqs = [
+	const questions = [
 		{
-			q: 'Is the storage actually unlimited?',
-			a: 'It is as unlimited as your Telegram account. You are not renting a bucket, so there is no plan to outgrow. Telegram Premium accounts can hold 4 GB per file; free accounts hold 2 GB.'
+			q: 'Where do my files actually live?',
+			a: 'In a private Telegram chat with your storage bot, as ordinary documents. Your photos and video are not re-uploaded anywhere else.'
 		},
 		{
-			q: 'Who can read my files?',
-			a: 'Only your signed-in session. Files sit in a private chat between you and the storage bot, and every API route checks the session before touching a chunk.'
+			q: 'What happens if I delete the app?',
+			a: 'Your files are still in Telegram. The database only stores names, sizes and message references, so a backup of one folder is enough to rebuild the drive.'
 		},
 		{
-			q: 'What about the 50 MB Bot API limit?',
-			a: 'Uploads are already chunked to 45 MB so they clear it. If you want to move files over 20 MB back out, run Telegram’s own Bot API server and point TELEGRAM_API_BASE at it — the limits become 2 GB with no download cap.'
+			q: 'Can I share a single file?',
+			a: 'Yes. Create a link with an optional expiry, send it to anyone, and revoke it whenever you like. Whoever holds the link can stream the file without an account.'
 		},
 		{
-			q: 'What happens when I delete something?',
-			a: 'It goes to Trash and the Telegram messages are kept, so restore is instant. “Delete forever” removes the messages from Telegram too.'
+			q: 'Why is there a 2 GB limit?',
+			a: 'That is Telegram’s per-file ceiling for a free account, not ours. Run your own Telegram Bot API server and the practical limit becomes the 2 GB single-document cap with no download ceiling.'
 		},
 		{
-			q: 'Can I run this myself?',
-			a: 'Yes — it is a Node app. npm install, fill in three environment variables, npm run build, node build/index.js. SQLite and the blob cache live in ./data.'
+			q: 'Is this really self-hostable?',
+			a: 'It ships as a Docker image. One volume for the database, five environment variables, and it runs anywhere you can run a container.'
 		}
 	];
+
+	let open = $state(0);
 </script>
 
 <div class="min-h-screen">
-	<!-- masthead -->
-	<header class="sticky top-0 z-40 border-b border-rule bg-paper/85 backdrop-blur-sm">
-		<div class="mx-auto flex h-14 w-full max-w-[76rem] items-center justify-between px-5 sm:px-8">
-			<a href="/"><Logo /></a>
-			<nav class="hidden items-center gap-7 md:flex">
-				{#each [['Features', '#features'], ['How it works', '#how'], ['Questions', '#faq']] as [label, href]}
-					<a
-						href={href}
-						class="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-3 transition-colors hover:text-ink"
-					>
-						{label}
-					</a>
-				{/each}
+	<header class="sticky top-0 z-40 border-b border-rule bg-paper/80 backdrop-blur-md">
+		<div class="mx-auto flex h-16 w-full max-w-[72rem] items-center justify-between px-5 sm:px-8">
+			<a href="/" aria-label="TeleDrive home"><Logo /></a>
+			<nav class="hidden items-center gap-8 md:flex">
+				<a href="#how" class="text-[13.5px] text-ink-2 transition-colors hover:text-ink">How it works</a>
+				<a href="#questions" class="text-[13.5px] text-ink-2 transition-colors hover:text-ink">Questions</a>
+				<a href="https://core.telegram.org/bots/api" class="text-[13.5px] text-ink-2 transition-colors hover:text-ink" rel="noreferrer" target="_blank">The API</a>
 			</nav>
 			<div class="flex items-center gap-2">
 				<ThemeToggle />
-				<a href="/login" class="btn btn-primary">
-					Log in
-					<ArrowRight size={14} strokeWidth={1.8} />
-				</a>
+				<a href="/login" class="btn btn-primary">Log in</a>
 			</div>
 		</div>
 	</header>
 
 	<main>
-		<!-- hero -->
-		<section class="mx-auto w-full max-w-[76rem] px-5 pb-16 pt-14 sm:px-8 sm:pt-20">
-			<div class="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
-				<div class="rise">
-					<div class="flex flex-wrap items-center gap-3">
-						<span class="tag">v1.0</span>
-						<span class="tag">Node · SvelteKit</span>
-						<span class="tag">Telegram storage</span>
-					</div>
-
-					<h1 class="display mt-7 text-[clamp(3rem,7.6vw,5.6rem)] text-ink">
-						Your unlimited<br />
-						personal <em class="italic">cloud</em><span class="text-accent">.</span>
-					</h1>
-
-					<p class="mt-7 max-w-[34rem] text-[15px] leading-7 text-ink-2">
-						TeleDrive is a file manager with no storage bill. It keeps your documents, photos and video inside
-						the Telegram account you already have, and gives you a proper drive to browse them.
+		<!-- hero: the claim, then the seam -->
+		<section class="mx-auto w-full max-w-[72rem] px-5 pb-14 pt-14 sm:px-8 sm:pt-20">
+			<div class="grid items-start gap-12 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16">
+				<div>
+					<p class="inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-[12.5px] font-medium text-accent">
+						<InfinityMark size={13} strokeWidth={2} />
+						Unlimited storage, paid for already
 					</p>
 
-					<div class="mt-9 flex flex-wrap items-center gap-3">
-						<a href="/login" class="btn btn-primary px-5 py-3 text-sm">
+					<h1 class="display mt-6 text-[clamp(2.9rem,6.4vw,4.6rem)] text-ink">
+						Your files, kept in a chat you already have.
+					</h1>
+
+					<p class="mt-6 max-w-[34rem] text-[15.5px] leading-[1.65] text-ink-2">
+						TeleDrive turns a Telegram conversation into a proper drive. Folders, previews, share links,
+						trash that restores — over storage you are not paying for separately.
+					</p>
+
+					<div class="mt-8 flex flex-wrap items-center gap-3">
+						<a href="/login" class="btn btn-primary px-5 py-3 text-[14px]">
 							Log in with Telegram
-							<ArrowRight size={15} strokeWidth={1.8} />
+							<ArrowRight size={15} strokeWidth={2} />
 						</a>
-						<a href="#how" class="btn btn-ghost px-5 py-3 text-sm">How it works</a>
+						<a href="#how" class="btn btn-ghost px-5 py-3 text-[14px]">See how it works</a>
 					</div>
 
-					<p class="mt-6 font-mono text-[11px] leading-relaxed text-ink-3">
-						No card. No quota. No files on our servers.
+					<p class="mt-6 flex items-center gap-2 text-[12.5px] text-ink-3">
+						<ShieldCheck size={14} class="text-success" strokeWidth={2} />
+						No card, no quota, and nothing stored on our servers.
 					</p>
 				</div>
 
-				<!-- the ledger card -->
-				<aside class="rise self-start border border-rule bg-paper-2" style="animation-delay:.08s">
-					<div class="flex items-center justify-between border-b border-rule px-4 py-2.5">
-						<span class="label">Storage ledger</span>
-						<span class="label text-ink-3">{new Date().getFullYear()}</span>
-					</div>
-
-					<dl class="divide-y divide-rule">
-						{#each stats as s}
-							<div class="flex items-baseline justify-between gap-4 px-4 py-3.5">
-								<dt class="text-[13px] text-ink-2">{s.k}</dt>
-								<dd class="text-right">
-									<span class="font-display text-2xl leading-none text-ink">{s.v}</span>
-									<span class="mt-1 block font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3">
-										{s.note}
-									</span>
-								</dd>
-							</div>
-						{/each}
-					</dl>
-
-					<div class="border-t border-rule px-4 py-3.5">
-						<div class="flex items-center justify-between">
-							<span class="label">Sample file · 212 MB</span>
-							<span class="font-mono text-[10px] text-ink-3">5 chunks</span>
+				<!-- the one bold device: a seam with two labels and files hanging from it -->
+				<figure class="relative">
+					<div class="card overflow-hidden p-5 sm:p-6">
+						<div class="flex items-baseline justify-between">
+							<p class="text-[13px] font-medium text-ink">Your Telegram chat</p>
+							<p class="meta num">3 documents, 1 file</p>
 						</div>
-						<div class="mt-2.5 flex gap-1">
-							{#each Array(5) as _, i}
-								<span
-									class="h-5 flex-1 border border-rule-strong"
-									style="background: {'var(--accent)'};opacity:{0.12 + i * 0.16}"
-								></span>
+
+						<div class="seam-list mt-4 pl-7">
+							<span class="seam-draw absolute left-[22px] top-0 h-full border-l border-dashed border-accent/60" aria-hidden="true"></span>
+							{#each [{ n: 'holiday-04.mp4', s: '45 MB', part: 'part 1' }, { n: 'holiday-04.mp4', s: '45 MB', part: 'part 2' }, { n: 'holiday-04.mp4', s: '12.4 MB', part: 'part 3' }, { n: 'notes.md', s: '4 KB', part: '' }] as chunk, i}
+								<div class="relative flex items-center gap-3 py-[7px]">
+									<span
+										class="absolute -left-7 grid h-[15px] w-[15px] place-items-center rounded-full border-2 border-paper bg-accent"
+										aria-hidden="true"
+									></span>
+									<span class="truncate text-[12.5px] text-ink-2">{chunk.n}</span>
+									<span class="ml-auto shrink-0 text-[11.5px] text-ink-3 num">{chunk.s}</span>
+								</div>
 							{/each}
 						</div>
-						<div class="mt-2 flex items-center justify-between font-mono text-[10px] text-ink-3">
-							<span>doc 01</span><span>doc 05</span>
+
+						<div class="mt-5 flex items-baseline justify-between border-t border-rule pt-4">
+							<p class="text-[13px] font-medium text-ink">Your drive</p>
+							<p class="meta">one file, stitched back together</p>
+						</div>
+						<div class="mt-3 flex items-center gap-3 rounded-[10px] bg-paper-3 px-3 py-2.5">
+							<span class="grid h-8 w-8 place-items-center rounded-lg bg-accent/15 text-accent">
+								<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M8 5.5v13M8 5.5l-3 3M8 5.5l3 3" stroke-linecap="round" stroke-linejoin="round" />
+									<path d="M16 18.5v-13M16 18.5l-3-3M16 18.5l3-3" stroke-linecap="round" stroke-linejoin="round" />
+								</svg>
+							</span>
+							<span class="text-[12.5px] text-ink">holiday-04.mp4</span>
+							<span class="ml-auto text-[11.5px] text-ink-3 num">102.4 MB</span>
 						</div>
 					</div>
-
-					<div class="flex items-center gap-2 border-t border-rule px-4 py-2.5">
-						<span class="h-1.5 w-1.5 rounded-full bg-success"></span>
-						<span class="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-2">
-							Bot connected · chat pinned
-						</span>
-					</div>
-				</aside>
+					<figcaption class="mt-3 px-1 text-[12px] leading-relaxed text-ink-3">
+						A large file is several documents in Telegram. TeleDrive reassembles them as you download.
+					</figcaption>
+				</figure>
 			</div>
 		</section>
 
-		<!-- figure strip -->
-		<section class="border-y border-rule bg-paper-2/60">
-			<div class="mx-auto grid w-full max-w-[76rem] grid-cols-2 divide-rule px-5 sm:grid-cols-4 sm:divide-x sm:px-8">
-				{#each [{ v: '∞', k: 'files' }, { v: '45 MB', k: 'chunk ceiling' }, { v: '4 GB', k: 'per file, premium' }, { v: '0', k: 'third-party buckets' }] as f, i}
-					<div class="px-0 py-6 sm:px-6 {i > 0 ? 'sm:pl-6' : 'sm:pl-0'} {i < 3 ? 'border-b border-rule sm:border-0' : ''}">
-						<p class="font-display text-3xl leading-none text-ink">{f.v}</p>
-						<p class="mt-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">{f.k}</p>
+		<!-- facts, as a four-up band rather than cards -->
+		<section class="border-y border-rule bg-paper-2">
+			<div class="mx-auto grid w-full max-w-[72rem] grid-cols-2 gap-y-8 px-5 py-9 sm:px-8 lg:grid-cols-4">
+				{#each facts as fact, i}
+					<div class="px-0 lg:px-6 {i > 0 ? 'lg:border-l lg:border-rule' : ''} {i === 0 ? 'lg:pl-0' : ''}">
+						<p class="display text-[2rem] leading-none text-ink">{fact.figure}</p>
+						<p class="mt-2 text-[12.5px] font-medium text-ink">{fact.label}</p>
+						<p class="mt-1 max-w-[15rem] text-[12px] leading-relaxed text-ink-3">{fact.note}</p>
 					</div>
 				{/each}
 			</div>
 		</section>
 
-		<!-- features -->
-		<section id="features" class="mx-auto w-full max-w-[76rem] px-5 py-20 sm:px-8">
-			<div class="grid gap-10 lg:grid-cols-[0.42fr_0.58fr]">
-				<div>
-					<span class="label">01 — The product</span>
-					<h2 class="display mt-4 text-[clamp(2rem,3.6vw,2.9rem)] text-ink">
-						Everything a drive needs.<br /><em class="italic">Nothing it doesn’t.</em>
-					</h2>
-					<p class="mt-5 max-w-[26rem] text-sm leading-7 text-ink-2">
-						Folders, rename, move, star, trash, restore, search, grid and list views, inline preview. The
-						unremarkable things, done carefully.
-					</p>
-				</div>
+		<!-- how it works: a real sequence, so the numbers stay -->
+		<section id="how" class="mx-auto w-full max-w-[72rem] px-5 py-20 sm:px-8">
+			<div class="max-w-[38rem]">
+				<h2 class="display text-[clamp(1.9rem,3.6vw,2.7rem)] text-ink">Three things happen, in this order</h2>
+				<p class="mt-4 text-[15px] leading-[1.65] text-ink-2">
+					Everything else in the product is a variation on these three steps.
+				</p>
+			</div>
 
-				<ul class="grid gap-x-10 gap-y-0 sm:grid-cols-2">
-					{#each [['Unlimited', 'Chunks live in Telegram, so the ceiling is your account, not a plan.'], ['Private', 'A private chat with your bot. Every route checks your session first.'], ['Streaming', 'Chunked reads with Range support — video seeks and downloads resume.'], ['Portable', 'One SQLite file, one env file, one Node process. Run it anywhere.'], ['Honest UI', 'Hairline rules instead of card soup. Colour only when it means something.'], ['Dark by choice', 'A separately tuned dark palette, not an inverted light one.']] as [t, d], i}
-						<li class="rule-top py-5 {i < 2 ? 'sm:border-t-0' : ''}">
-							<div class="flex items-baseline gap-2">
-								<span class="font-mono text-[10px] text-ink-3">{String(i + 1).padStart(2, '0')}</span>
-								<h3 class="text-[15px] font-medium text-ink">{t}</h3>
-							</div>
-							<p class="mt-1.5 pl-6 text-[13px] leading-6 text-ink-2">{d}</p>
-						</li>
-					{/each}
-				</ul>
+			<ol class="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
+				{#each steps as step, i}
+					<li class="relative">
+						<div class="flex items-center gap-3">
+							<span class="grid h-8 w-8 place-items-center rounded-full bg-accent text-[13px] font-semibold text-white num">
+								{i + 1}
+							</span>
+							{#if i < steps.length - 1}
+								<span class="hidden h-px flex-1 border-t border-dashed border-line-strong md:block" aria-hidden="true"></span>
+							{/if}
+						</div>
+						<h3 class="mt-4 text-[15.5px] font-semibold text-ink">{step.title}</h3>
+						<p class="mt-2 text-[13.5px] leading-[1.7] text-ink-2">{step.body}</p>
+					</li>
+				{/each}
+			</ol>
+
+			<div class="mt-14 rounded-[14px] bg-ink px-5 py-5 text-paper sm:px-6">
+				<p class="text-[12.5px] text-paper/60">Run it yourself</p>
+				<pre class="mt-2 overflow-x-auto text-[12.5px] leading-relaxed"><code>docker compose up -d --build</code></pre>
 			</div>
 		</section>
 
-		<!-- how it works -->
-		<section id="how" class="border-y border-rule bg-paper-2/60">
-			<div class="mx-auto w-full max-w-[76rem] px-5 py-20 sm:px-8">
-				<div class="flex flex-wrap items-end justify-between gap-4">
-					<div>
-						<span class="label">02 — The mechanism</span>
-						<h2 class="display mt-4 text-[clamp(2rem,3.6vw,2.9rem)] text-ink">Three moves, start to finish.</h2>
-					</div>
-					<p class="max-w-[22rem] text-[13px] leading-6 text-ink-3">
-						The whole pipeline is a signed login, a chunked write, and an ordered read.
+		<!-- questions: an accordion, because only one answer is needed at a time -->
+		<section id="questions" class="border-t border-rule bg-paper-2">
+			<div class="mx-auto grid w-full max-w-[72rem] gap-10 px-5 py-20 sm:px-8 lg:grid-cols-[0.8fr_1.2fr]">
+				<div>
+					<h2 class="display text-[clamp(1.9rem,3.6vw,2.7rem)] text-ink">Fair questions</h2>
+					<p class="mt-4 max-w-[22rem] text-[14px] leading-[1.7] text-ink-2">
+						If something here is unclear, it is a documentation bug — tell us and it gets fixed.
 					</p>
 				</div>
 
-				<ol class="mt-10 grid gap-0 border-t border-rule md:grid-cols-3 md:divide-x md:divide-rule">
-					{#each rows as r, i}
-						<li class="border-b border-rule px-0 py-7 md:border-b-0 md:px-7 {i === 0 ? 'md:pl-0' : ''}">
-							<div class="flex items-center justify-between">
-								<span class="font-display text-4xl leading-none text-ink-3">{r.n}</span>
-								<span class="tag">{r.meta}</span>
-							</div>
-							<h3 class="mt-4 text-[15px] font-medium text-ink">{r.title}</h3>
-							<p class="mt-2 text-[13px] leading-6 text-ink-2">{r.body}</p>
-						</li>
-					{/each}
-				</ol>
-
-				<div class="mt-8 border border-rule bg-ink px-4 py-3.5 text-paper-2">
-					<pre class="overflow-x-auto font-mono text-[11.5px] leading-relaxed"><span class="opacity-50">$</span> TELEGRAM_BOT_TOKEN=… TELEGRAM_BOT_USERNAME=… <span class="opacity-50">\</span>
-  TELEGRAM_STORAGE_CHAT_ID=… npm run build && node build/index.js</pre>
-				</div>
-			</div>
-		</section>
-
-		<!-- faq -->
-		<section id="faq" class="mx-auto w-full max-w-[76rem] px-5 py-20 sm:px-8">
-			<div class="grid gap-10 lg:grid-cols-[0.42fr_0.58fr]">
-				<div>
-					<span class="label">03 — Questions</span>
-					<h2 class="display mt-4 text-[clamp(2rem,3.6vw,2.9rem)] text-ink">Answered plainly.</h2>
-				</div>
-				<div class="border-t border-rule">
-					{#each faqs as f, i}
-						<details class="group border-b border-rule" open={i === 0}>
-							<summary
-								class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-[14px] font-medium text-ink marker:hidden"
+				<div class="divide-y divide-rule border-y border-rule">
+					{#each questions as item, i}
+						<div>
+							<button
+								class="flex w-full items-center justify-between gap-4 py-4 text-left"
+								onclick={() => (open = open === i ? -1 : i)}
+								aria-expanded={open === i}
 							>
-								{f.q}
-								<span class="text-ink-3 transition group-open:text-accent">
-									{#if i === 0}<Minus size={15} strokeWidth={1.6} />{:else}<Plus size={15} strokeWidth={1.6} />{/if}
+								<span class="text-[14.5px] font-medium text-ink">{item.q}</span>
+								<span class="shrink-0 text-ink-3 transition-transform duration-200" class:rotate-45={open === i}>
+									<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8">
+										<path d="M8 2.5v11M2.5 8h11" stroke-linecap="round" />
+									</svg>
 								</span>
-							</summary>
-							<p class="max-w-[38rem] pb-5 text-[13px] leading-7 text-ink-2">{f.a}</p>
-						</details>
+							</button>
+							{#if open === i}
+								<p class="max-w-[36rem] pb-5 text-[13.5px] leading-[1.75] text-ink-2 rise">{item.a}</p>
+							{/if}
+						</div>
 					{/each}
 				</div>
 			</div>
 		</section>
 
-		<!-- cta -->
-		<section class="border-t border-rule">
-			<div class="mx-auto flex w-full max-w-[76rem] flex-col gap-8 px-5 py-16 sm:px-8 md:flex-row md:items-end md:justify-between">
-				<div>
-					<h2 class="display max-w-[30rem] text-[clamp(2.2rem,4.4vw,3.4rem)] text-ink">
-						Your files deserve a <em class="italic">quieter</em> home.
-					</h2>
-					<p class="mt-4 max-w-[30rem] text-sm leading-7 text-ink-2">
-						One tap to start. Your first upload takes under a minute.
-					</p>
+		<!-- closing -->
+		<section class="mx-auto w-full max-w-[72rem] px-5 py-20 sm:px-8">
+			<div class="flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
+				<h2 class="display max-w-[26rem] text-[clamp(2rem,4vw,3rem)] text-ink">
+					Open your drive and put something in it.
+				</h2>
+				<div class="flex flex-col items-start gap-3">
+					<a href="/login" class="btn btn-primary px-6 py-3.5 text-[14px]">
+						Log in with Telegram
+						<ArrowRight size={16} strokeWidth={2} />
+					</a>
+					<p class="text-[12.5px] text-ink-3">Takes about ten seconds, and your first upload is instant.</p>
 				</div>
-				<a href="/login" class="btn btn-primary shrink-0 px-6 py-3.5 text-sm">
-					Open my drive
-					<ArrowUpRight size={16} strokeWidth={1.8} />
-				</a>
 			</div>
 		</section>
 	</main>
 
-	<footer class="border-t border-rule bg-paper-2/60">
-		<div class="mx-auto flex w-full max-w-[76rem] flex-col gap-4 px-5 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-			<div class="flex items-center gap-3">
-				<Logo size={26} textClass="text-lg" />
-				<span class="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">
-					© {new Date().getFullYear()} {data.siteName}
-				</span>
-			</div>
-			<div class="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">
-				<span>A Node.js project</span>
-				<span class="hidden sm:inline">{formatBytes(47185920)} chunks</span>
-				<a href="/login" class="transition-colors hover:text-ink">Sign in</a>
-			</div>
+	<footer class="border-t border-rule">
+		<div class="mx-auto flex w-full max-w-[72rem] flex-col gap-3 px-5 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+			<Logo size={26} textClass="text-[1.1rem]" />
+			<p class="text-[12.5px] text-ink-3">
+				© {new Date().getFullYear()} {data.siteName} · a Node project, packaged as one container
+			</p>
 		</div>
 	</footer>
 </div>

@@ -38,7 +38,7 @@
 			<div class="flex items-start justify-between border-b border-rule px-5 py-3">
 				<div>
 					<h2 class="font-display text-lg text-ink">{prompt.title}</h2>
-					<p class="label mt-0.5">{prompt.mode === 'create-folder' ? 'New folder' : 'Rename item'}</p>
+					<p class="mt-0.5 text-[11.5px] text-ink-3">{prompt.mode === 'create-folder' ? 'New folder' : 'Rename item'}</p>
 				</div>
 				<button type="button" class="icon-btn h-7 w-7" onclick={() => (drive.prompt = null)}>
 					<X size={13} />
@@ -46,7 +46,7 @@
 			</div>
 
 			<div class="px-5 py-5">
-				<label class="label" for="prompt-input">{prompt.label}</label>
+				<label class="text-[11.5px] font-medium text-ink-3" for="prompt-input">{prompt.label}</label>
 				<input
 					id="prompt-input"
 					class="input mt-2"
