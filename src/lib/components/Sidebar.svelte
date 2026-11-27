@@ -3,7 +3,7 @@
 	import ThemeToggle from './ThemeToggle.svelte';
 	import { page } from '$app/state';
 	import { formatBytes } from '#lib/format.js';
-	import { HardDrive, Star, Clock, Trash2, Settings, LogOut, Plus } from 'lucide-svelte';
+	import { HardDrive, Star, Clock, Trash2, Settings, LogOut, Plus, Activity } from 'lucide-svelte';
 
 	let { data, user, onNewFolder } = $props();
 
@@ -11,7 +11,8 @@
 		{ href: '/drive', label: 'My Drive', icon: HardDrive },
 		{ href: '/drive/starred', label: 'Starred', icon: Star },
 		{ href: '/drive/recent', label: 'Recent', icon: Clock },
-		{ href: '/drive/trash', label: 'Trash', icon: Trash2 }
+		{ href: '/drive/trash', label: 'Trash', icon: Trash2 },
+		{ href: '/drive/activity', label: 'Activity', icon: Activity }
 	];
 
 	const isActive = (href) =>

@@ -44,6 +44,36 @@ CREATE TABLE IF NOT EXISTS shares (
 );
 CREATE INDEX IF NOT EXISTS idx_shares_file ON shares(file_id);
 
+CREATE TABLE IF NOT EXISTS audit_log (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+	action TEXT NOT NULL,
+	target_id TEXT,
+	target_name TEXT,
+	detail TEXT,
+	ip TEXT,
+	created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id, id);
+
+-- chats the bot can read/copy from, discovered via getUpdates
+CREATE TABLE IF NOT EXISTS chat_links (
+	chat_id TEXT PRIMARY KEY,
+	username TEXT,
+	title TEXT,
+	updated_at TEXT NOT NULL
+);
+
+-- a file may be a copy of a Telegram message that already holds the bytes
+CREATE TABLE IF NOT EXISTS file_sources (
+	file_id TEXT PRIMARY KEY REFERENCES files(id) ON DELETE CASCADE,
+	origin_chat_id TEXT,
+	origin_message_id INTEGER,
+	source_url TEXT,
+	telegram_link TEXT,
+	imported_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS files (
 	id TEXT PRIMARY KEY,
 	user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

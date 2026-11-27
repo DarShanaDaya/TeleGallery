@@ -7,10 +7,11 @@
 	import PreviewModal from '#lib/components/PreviewModal.svelte';
 	import MoveModal from '#lib/components/MoveModal.svelte';
 	import ShareModal from '#lib/components/ShareModal.svelte';
+	import ImportModal from '#lib/components/ImportModal.svelte';
 	import { drive, api } from '#lib/drive.svelte.js';
 	import { uploader } from '#lib/uploader.svelte.js';
 	import { formatBytes } from '#lib/format.js';
-	import { ChevronRight, CloudUpload, FolderPlus, Upload, CornerDownRight } from 'lucide-svelte';
+	import { ChevronRight, CloudUpload, FolderPlus, Upload, CornerDownRight, Link2 } from 'lucide-svelte';
 
 	let { data } = $props();
 
@@ -75,7 +76,8 @@
 	ondragleave={() => (dragging = false)}
 />
 
-<Topbar {data} {title} {subtitle} bind:view onUpload={pickFiles} onNewFolder={() => drive.newFolder(parentId)} />
+<Topbar {data} {title} {subtitle} bind:view onUpload={pickFiles} onNewFolder={() => drive.newFolder(parentId)}
+	onImport={() => (drive.importOpen = true)} />
 
 <input type="file" multiple class="hidden" bind:this={fileInput} onchange={onFilesChosen} />
 
@@ -119,9 +121,12 @@
 				</p>
 				<div class="mt-6 flex flex-wrap justify-center gap-2">
 					<button class="btn btn-primary" onclick={pickFiles}><Upload size={13} /> Upload files</button>
-					<button class="btn btn-ghost" onclick={() => drive.newFolder(parentId)}
-						><FolderPlus size={13} /> New folder</button
-					>
+					<button class="btn btn-ghost" onclick={() => drive.newFolder(parentId)}>
+						<FolderPlus size={13} /> New folder
+					</button>
+					<button class="btn btn-ghost" onclick={() => (drive.importOpen = true)}>
+						<Link2 size={13} /> Add from a Telegram link
+					</button>
 				</div>
 				<p class="mt-6 text-[11px] text-ink-3">
 					Unlimited · private · chunked at 45 MB
@@ -147,3 +152,4 @@
 <PreviewModal />
 <MoveModal />
 <ShareModal />
+<ImportModal />

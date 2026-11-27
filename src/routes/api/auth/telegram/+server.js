@@ -1,5 +1,6 @@
 import { upsertUser, createSession, SESSION_COOKIE } from '#lib/server/auth.js';
 import { verifyTelegramAuth } from '#lib/server/telegram.js';
+import { record } from '#lib/server/audit.js';
 import { json } from '#lib/server/http.js';
 import { telegramLoginEnabled } from '#lib/server/config.js';
 
@@ -12,6 +13,12 @@ function signIn(event, tgUser) {
 		lastName: tgUser.last_name ?? null,
 		photoUrl: tgUser.photo_url ?? null,
 		language: tgUser.language_code ?? null
+	});
+	record({
+		userId,
+		action: 'auth.login',
+		detail: 'Telegram login',
+		ip: event.getClientAddress?.() ?? null
 	});
 	const { id, expires } = createSession(userId, {
 		userAgent: event.request.headers.get('user-agent'),

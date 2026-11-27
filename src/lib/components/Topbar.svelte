@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import Logo from './Logo.svelte';
 	import ThemeToggle from './ThemeToggle.svelte';
-	import { Search, Upload, Plus, X, Rows3, LayoutGrid } from 'lucide-svelte';
+	import { Search, Upload, Plus, X, Rows3, LayoutGrid, Link2 } from 'lucide-svelte';
 
 	let {
 		title = 'My Drive',
@@ -12,6 +12,7 @@
 		view = $bindable('list'),
 		onUpload,
 		onNewFolder,
+		onImport,
 		data
 	} = $props();
 
@@ -87,6 +88,13 @@
 		{#if onNewFolder}
 			<button class="icon-btn" onclick={onNewFolder} title="New folder" aria-label="New folder">
 				<Plus size={15} strokeWidth={2.1} />
+			</button>
+		{/if}
+
+		{#if onImport}
+			<button class="btn btn-ghost h-8 px-3 text-[12.5px]" onclick={onImport} title="Add from a Telegram link">
+				<Link2 size={13} strokeWidth={2.1} />
+				<span class="hidden sm:inline">Add link</span>
 			</button>
 		{/if}
 

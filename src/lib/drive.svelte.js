@@ -11,6 +11,7 @@ class DriveStore {
 	preview = $state(null);
 	move = $state(null);
 	share = $state(null);
+	importOpen = $state(false);
 	sidebarOpen = $state(false);
 
 	refresh() {

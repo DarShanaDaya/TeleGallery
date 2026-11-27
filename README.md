@@ -23,6 +23,10 @@ Landing page  →  Login with Telegram  →  File manager  →  Files live in Te
 | **Streamable video** | Proper RFC 7233 ranges: `206` with `Content-Range`, `416` when unsatisfiable, and `HEAD` for metadata. Seeking works in browsers and `ffmpeg`. |
 | **Direct links** | Share a file with an expiring, revocable, unguessable token (`/s/<token>`) — no sign-in needed to stream or download. |
 | **Downloads & save a copy** | Attachment downloads, plus "Save a copy" which re-encodes the filename server-side. |
+| **Import from a link** | Paste a `t.me/...` post link and the file is **copied in place** with `copyMessage` — no re-upload, so a 1.5 GB import is instant. Duplicate links are detected. |
+| **Audit log** | Every import, upload, download, share, rename, trash and sign-in is recorded with target, IP and time, and filterable at `/drive/activity`. |
+| **One-click link copying** | "Copy both links" puts the Telegram post link and the TeleDrive share link on the clipboard together. |
+| **Full player** | Bookmarkable `/drive/watch/<id>` queue player: keyboard control, resume position, speed, volume, fullscreen, seek bar, next/previous, loop. |
 | **Two palettes** | Light "paper" and a hand-tuned "ink" dark theme, toggled in the UI and remembered. Set before first paint, so no flash. |
 
 ## Quick start
@@ -200,6 +204,53 @@ src/
 ```
 
 A file is one row in `files` plus one row per chunk in `parts` (Telegram chat id, message id, file id). On download the parts are fetched from Telegram (and cached on disk) and piped to the client in order.
+
+## Importing from Telegram
+
+Paste a link to any post that contains a file:
+
+```
+https://t.me/channel/123        public channel post
+https://t.me/channel/45/678     post inside a forum topic (trailing id wins)
+https://t.me/c/1234567890/42    private chat post → -1001234567890
+```
+
+The server calls `copyMessage` to move the message into your storage chat. **The bytes
+never pass through the server**, so the import is instant at any size and there is no
+50 MB ceiling on it. One `parts` row is then written pointing at the copied document,
+which means an imported file downloads through exactly the same path as an upload.
+
+**Requirements and limits.** The bot must be able to read the source chat — a member of
+the group, or an admin of the channel. Telegram will not let a bot copy from a private
+chat it is not in. `getUpdates` also discovers chats the bot has seen, which populate
+the destination picker; if a webhook is set, that list stays empty and the configured
+storage chat is used.
+
+## Activity log
+
+`audit_log` is append-only and per-user: action, target id, target name, a free-text
+detail (the source URL for an import, the path for a share), the client IP and a
+timestamp. `GET /api/activity?action=import&limit=50` returns entries plus a total, and
+`/drive/activity` renders them as a timeline with filters. Nothing is pruned
+automatically; `prune(userId, days)` is available if you want a retention policy.
+
+## The player
+
+`/drive/watch/<fileId>` is a real page, so every position in a queue is bookmarkable and
+shareable as a URL. The queue is the other playable files in the same folder. Controls:
+
+| Key | Action |
+|---|---|
+| `space` / `k` | play or pause |
+| `←` `→` | seek 5s (`shift` = 30s) |
+| `↑` `↓` | volume |
+| `1`–`9` | jump to that tenth of the file |
+| `n` / `p` | next / previous in the queue |
+| `f` | fullscreen |
+| `m` | mute |
+
+Playback position is saved per file every few seconds, so reopening a video resumes
+where you stopped — that state lives in `localStorage`, not on the server.
 
 ## Sessions, sharing and streaming
 

@@ -2,6 +2,7 @@ import { json, requireUser } from '#lib/server/http.js';
 import { db } from '#lib/server/db.js';
 import { streamFile } from '#lib/server/download.js';
 import { decodeInlineFilename } from '#lib/server/naming.js';
+import { record } from '#lib/server/audit.js';
 
 async function handle(event) {
 	const { user, error } = requireUser(event);
@@ -20,6 +21,15 @@ async function handle(event) {
 		if (decoded) row.name = decoded;
 	}
 	const res = await streamFile(event, row, { inline });
+	if (!inline) {
+		record({
+			userId: user.id,
+			action: 'download',
+			targetId: row.id,
+			targetName: row.name,
+			ip: event.getClientAddress?.() ?? null
+		});
+	}
 	if (!res) return json({ error: 'File has no stored content' }, 404);
 	return res;
 }

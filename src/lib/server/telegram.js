@@ -72,6 +72,64 @@ export async function uploadChunk({ buffer, filename, chatId, signal }) {
 	};
 }
 
+/**
+ * Copy a message from one chat to another inside Telegram. This is how import works:
+ * the bytes never travel through this server, so an import is instant regardless of
+ * file size, and the original sender/message stay intact.
+ */
+export async function copyMessage({ fromChatId, messageId, toChatId, caption }) {
+	if (!telegramEnabled) throw new Error('TELEGRAM_BOT_TOKEN is not configured');
+	const form = new FormData();
+	form.append('chat_id', String(toChatId));
+	form.append('from_chat_id', String(fromChatId));
+	form.append('message_id', String(messageId));
+	form.append('disable_notification', 'true');
+	if (caption) form.append('caption', String(caption).slice(0, 1000));
+
+	const message = await call('copyMessage', form);
+	// copyMessage returns only the new message_id; fetch the message to learn the file.
+	return getMessage(toChatId, message.message_id);
+}
+
+/** Fetch a single message so we can read its document/photo/video metadata. */
+export async function getMessage(chatId, messageId) {
+	const form = new FormData();
+	form.append('chat_id', String(chatId));
+	form.append('message_id', String(messageId));
+	const result = await call('copyMessages_get', form).catch(() => null);
+	if (result) return result;
+
+	// Bot API has no getMessage; forwardMessage to the same chat is the reliable trick.
+	const forward = new FormData();
+	forward.append('chat_id', String(chatId));
+	forward.append('from_chat_id', String(chatId));
+	forward.append('message_id', String(messageId));
+	forward.append('disable_notification', 'true');
+	const copied = await call('forwardMessage', forward);
+	// remove the duplicate immediately so the chat is not polluted
+	await deleteMessages(chatId, [copied.message_id]);
+	return copied;
+}
+
+/** Which chats the bot has seen — used to offer import destinations. */
+export async function listKnownChats() {
+	const result = await call('getUpdates', form_({ limit: 100, allowed_updates: '["message","channel_post"]' })).catch(
+		() => []
+	);
+	const seen = new Map();
+	for (const update of result || []) {
+		const message = update.message || update.channel_post || update.edited_message;
+		const chat = message?.chat;
+		if (!chat) continue;
+		seen.set(String(chat.id), {
+			chatId: String(chat.id),
+			username: chat.username || null,
+			title: chat.title || [chat.first_name, chat.last_name].filter(Boolean).join(' ') || chat.username || String(chat.id)
+		});
+	}
+	return [...seen.values()];
+}
+
 export async function deleteMessages(chatId, messageIds) {
 	if (!telegramEnabled || !chatId || !messageIds?.length) return false;
 	const form = new FormData();

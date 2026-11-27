@@ -1,7 +1,8 @@
 <script>
 	import { drive, api } from '#lib/drive.svelte.js';
+	import { fileCategory } from '#lib/format.js';
 	import { toasts } from '#lib/toast.svelte.js';
-	import { Download, PencilLine, Star, StarOff, FolderInput, Trash2, RotateCcw, Trash, Eye, Link2 } from 'lucide-svelte';
+	import { Download, PencilLine, Star, StarOff, FolderInput, Trash2, RotateCcw, Trash, Eye, Link2, Send, Play } from 'lucide-svelte';
 
 	let { file, onClose } = $props();
 
@@ -37,6 +38,27 @@
 			drive.refresh();
 		});
 
+	async function copyBothLinks() {
+		onClose?.();
+		try {
+			const res = await fetch(`/api/files/${file.id}/links`);
+			const { telegramLink, shares } = await res.json();
+			const activeShare = shares?.find((s) => s.active);
+			const lines = [
+				telegramLink ? `Telegram: ${telegramLink}` : null,
+				activeShare ? `TeleDrive: ${location.origin}${activeShare.url}` : null
+			].filter(Boolean);
+			if (!lines.length) {
+				toasts.error('No links yet — create a share link first');
+				return;
+			}
+			await navigator.clipboard.writeText(lines.join('\n'));
+			toasts.success('Links copied');
+		} catch {
+			toasts.error('Could not copy the links');
+		}
+	}
+
 	const star = () =>
 		act(async () => {
 			await api(`/api/files/${file.id}`, { method: 'PATCH', body: JSON.stringify({ action: 'star' }) });
@@ -67,6 +89,14 @@
 			<button class="menu-item" role="menuitem" onclick={() => (onClose?.(), drive.openShare(file))}>
 				<Link2 size={13} /> Share link
 			</button>
+			<button class="menu-item" role="menuitem" onclick={copyBothLinks}>
+				<Send size={13} /> Copy both links
+			</button>
+			{#if ['video', 'audio'].includes(fileCategory(file.mime, file.name)) || file.mime?.startsWith('image/')}
+				<a class="menu-item" role="menuitem" href={`/drive/watch/${file.id}`}>
+					<Play size={13} /> Open in player
+				</a>
+			{/if}
 		{/if}
 		<button class="menu-item" role="menuitem" onclick={() => (onClose?.(), drive.rename(file))}>
 			<PencilLine size={13} /> Rename
