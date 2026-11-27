@@ -1,0 +1,42 @@
+services:
+  teledrive:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: teledrive:latest
+    container_name: teledrive
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      # Telegram — leave blank to run in local demo storage mode
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+      TELEGRAM_STORAGE_CHAT_ID: ${TELEGRAM_STORAGE_CHAT_ID:-}
+      # TELEGRAM_API_BASE: http://telegram-bot-api:8081
+      SESSION_SECRET: ${SESSION_SECRET:-change-me-in-production}
+      SITE_NAME: ${SITE_NAME:-TeleDrive}
+      ALLOW_DEMO_LOGIN: ${ALLOW_DEMO_LOGIN:-true}
+      DATA_DIR: /data
+      PORT: '3000'
+      HOST: 0.0.0.0
+      # Set this when running behind a TLS-terminating reverse proxy so cookies
+      # are marked Secure and absolute URLs are generated correctly.
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+    volumes:
+      - teledrive-data:/data
+    healthcheck:
+      test: ['CMD', 'node', 'healthcheck.js']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    stop_grace_period: 30s
+    # Uncomment to cap memory on small hosts.
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 1g
+
+volumes:
+  teledrive-data:
