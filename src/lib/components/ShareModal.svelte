@@ -8,6 +8,7 @@
 	let loading = $state(true);
 	let creating = $state(false);
 	let days = $state(7);
+	let mode = $state('anyone');
 	let copied = $state('');
 
 	function absolute(url) {
@@ -36,7 +37,7 @@
 		try {
 			const { share } = await api(`/api/files/${file.id}/shares`, {
 				method: 'POST',
-				body: JSON.stringify({ days: Number(days) })
+				body: JSON.stringify({ days: Number(days), mode })
 			});
 			links = [share, ...links];
 			toasts.success('Link created');
@@ -53,6 +54,13 @@
 		toasts.success('Link copied');
 		setTimeout(() => (copied = ''), 1500);
 	}
+
+    async function decide(link, request, status) {
+        try {
+            await api(`/api/files/${file.id}/shares`, { method: 'PATCH', body: JSON.stringify({shareId: link.id, userId: request.userId, status}) });
+            await load();
+        } catch (err) { toasts.error(err.message); }
+    }
 
 	async function revoke(link) {
 		try {
@@ -79,7 +87,7 @@
 			<div class="flex items-start justify-between border-b border-rule px-5 py-3">
 				<div class="min-w-0">
 					<h2 class="truncate font-display text-lg text-ink">Share “{file.name}”</h2>
-					<p class="mt-0.5 text-[11.5px] text-ink-3">Anyone with the link can download</p>
+					<p class="mt-0.5 text-[11.5px] text-ink-3">Choose who can access this link</p>
 				</div>
 				<button class="icon-btn h-7 w-7" onclick={() => (drive.share = null)}><X size={13} /></button>
 			</div>
@@ -87,6 +95,13 @@
 			<div class="border-b border-rule px-5 py-4">
 				<div class="flex flex-wrap items-end gap-2">
 					<label class="flex-1">
+                        <span class="text-[11.5px] font-medium text-ink-3">Access</span>
+                        <select class="input mt-1.5 h-9" bind:value={mode}>
+                            <option value="anyone">Anyone with link</option>
+                            <option value="approval">Approval required</option>
+                        </select>
+                    </label>
+                    <label class="flex-1">
 						<span class="text-[11.5px] font-medium text-ink-3">Expires</span>
 						<select class="input mt-1.5 h-9" bind:value={days}>
 							<option value={0}>Never</option>
@@ -128,7 +143,7 @@
 									{:else}
 										never expires
 									{/if}
-									· {link.views} open{link.views === 1 ? '' : 's'}
+									· {link.mode === 'approval' ? 'Approval required' : 'Anyone with link'} · {link.views} open{link.views === 1 ? '' : 's'}
 								</p>
 							</div>
 							<button class="icon-btn h-7 w-7" title="Copy link" onclick={() => copy(link.url, link.id)}>
@@ -140,14 +155,20 @@
 							<button class="icon-btn h-7 w-7" title="Revoke" onclick={() => revoke(link)}>
 								<Trash2 size={12} class="text-danger" />
 							</button>
-						</div>
+                        </div>
+                        {#each link.requests || [] as request (request.userId)}
+                          <div class="flex items-center gap-2 px-5 py-2 text-xs border-b border-rule">
+                            <span class="flex-1">{request.firstName || request.username || 'User'} {request.lastName || ''} {request.username ? `(@${request.username})` : ''} — {request.status}</span>
+                            {#if request.status !== 'approved'}<button class="btn btn-primary" onclick={() => decide(link, request, 'approved')}>Approve</button>{/if}
+                            {#if request.status !== 'denied'}<button class="btn btn-ghost" onclick={() => decide(link, request, 'denied')}>{request.status === 'approved' ? 'Remove access' : 'Deny'}</button>{/if}
+                          </div>
+                        {/each}
 					{/each}
 				{/if}
 			</div>
 
 			<p class="border-t border-rule px-5 py-2.5 text-[11px] leading-5 text-ink-3">
-				Anyone with a link can stream and download this file without signing in. Revoke a link to kill it
-				immediately.
+				Approval links require a signed-in account. Revoke a link to remove access immediately.
 			</p>
 		</div>
 	</div>

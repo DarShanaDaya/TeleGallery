@@ -6,18 +6,23 @@
  *   node scripts/smoke.mjs http://localhost:5173
  */
 const base = process.argv[2] || 'http://localhost:5173';
-let cookie = '';
+const cookies = new Map();
 
 const log = (ok, label, extra = '') => console.log(`${ok ? '✓' : '✗'} ${label}${extra ? ' — ' + extra : ''}`);
 
 async function req(path, options = {}) {
 	const res = await fetch(base + path, {
 		...options,
-		headers: { ...(options.body ? { 'content-type': 'application/json' } : {}), ...(cookie ? { cookie } : {}), ...(options.headers || {}) },
+		headers: { ...(options.body ? { 'content-type': 'application/json' } : {}), ...(cookies.size ? { cookie: [...cookies].map(([name, value]) => `${name}=${value}`).join('; ') } : {}), ...(options.headers || {}) },
 		redirect: 'manual'
 	});
-	const setCookie = res.headers.get('set-cookie');
-	if (setCookie) cookie = setCookie.split(';')[0];
+	for (const header of res.headers.getSetCookie()) {
+		const pair = header.split(';')[0];
+		const i = pair.indexOf('=');
+		const name = pair.slice(0, i), value = pair.slice(i + 1);
+		if (value) cookies.set(name, value);
+		else cookies.delete(name);
+	}
 	return res;
 }
 

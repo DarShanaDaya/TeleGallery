@@ -1,6 +1,6 @@
 # TeleDrive — Unlimited Personal Cloud
 
-A clean-room clone of [drive.kriztech.in](https://drive.kriztech.in/) built with **Node.js**, **SvelteKit**, **Svelte 5**, **Tailwind CSS 4** and **SQLite**. Users log in with their Telegram account and their files are stored as documents inside Telegram itself — so the drive really is unlimited.
+Built with **Node.js**, **SvelteKit**, **Svelte 5**, **Tailwind CSS 4** and **SQLite**. Users log in with their Telegram account and their files are stored as documents inside Telegram itself — so the drive really is unlimited.
 
 The interface follows what is loosely called the **Fable 5.2** design direction: warm paper-and-ink neutrals, hairline rules instead of stacked cards, a high-contrast serif for display type, Inter for UI copy and mono for data and labels, with colour reserved for meaning (action, danger, status) and a separately tuned dark theme rather than an inverted light one.
 
@@ -278,3 +278,9 @@ npm run smoke   # end-to-end against a running server: npm run dev, then npm run
 - Sessions are httpOnly cookies, 30 days, stored in SQLite — rotate them by deleting rows from `sessions`.
 - Files in trash keep their Telegram messages; *delete forever* removes them from Telegram as well.
 - `data/` is git-ignored; back it up if you rely on the local blob cache.
+
+### Accounts and sharing
+
+In Settings, choose **Add another account** to sign in to another Telegram account on the same browser. Switch accounts there; each account keeps its own separate drive. Saved sign-ins are browser-local sessions and can expire or be revoked. Account linking into a single drive is not supported.
+
+Use **Share link** on a file or folder to create an expiring or non-expiring link. Choose **Anyone with link** for public access, or **Approval required** to require recipients to sign in and request access. Open the item's Share dialog to approve, deny, or remove each recipient's access; recipients can revisit the link to check its status. Revoking a link removes access for everyone using that link. Folder links include live descendants; they do not grant access outside that folder. There are currently no email or push notifications for requests.

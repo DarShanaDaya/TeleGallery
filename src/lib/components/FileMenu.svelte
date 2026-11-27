@@ -98,6 +98,9 @@
 				</a>
 			{/if}
 		{/if}
+		{#if file.kind === 'folder'}
+            <button class="menu-item" role="menuitem" onclick={() => (onClose?.(), drive.openShare(file))}><Link2 size={13} /> Share link</button>
+        {/if}
 		<button class="menu-item" role="menuitem" onclick={() => (onClose?.(), drive.rename(file))}>
 			<PencilLine size={13} /> Rename
 		</button>

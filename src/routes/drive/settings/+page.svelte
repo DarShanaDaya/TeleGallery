@@ -7,6 +7,13 @@ import { invalidateAll } from '$app/navigation';
 
 	let { data } = $props();
 	let copied = $state('');
+    async function switchAccount(userId) {
+        try {
+            const res = await fetch('/api/accounts', { method:'POST', headers: {'content-type':'application/json'}, body:JSON.stringify({userId}) });
+            if (!res.ok) throw new Error('Account no longer available');
+            location.href = '/drive';
+        } catch (err) { toasts.error(err.message); }
+    }
 
 	let sessions = $state([]);
 	let busySession = $state('');
@@ -105,6 +112,18 @@ import { invalidateAll } from '$app/navigation';
 				</div>
 			</div>
 		</section>
+
+        <section class="mt-8 border-t border-rule pt-4">
+            <h2 class="font-display text-lg">Accounts on this browser</h2>
+            <p class="text-xs text-ink-3 mt-1">Each account has its own separate drive. Sessions can expire or be revoked.</p>
+            {#each data.accounts as account (account.user.id)}
+                <div class="flex items-center gap-3 border-b border-rule py-3 text-sm">
+                    <span class="flex-1">{account.user.firstName || account.user.username || 'Account'} {account.user.username ? `(@${account.user.username})` : ''}</span>
+                    {#if account.current}<span class="text-ink-3">Current</span>{:else}<button class="btn btn-ghost" onclick={() => switchAccount(account.user.id)}>Switch</button>{/if}
+                </div>
+            {/each}
+            <a class="btn btn-ghost mt-3" href="/login?add=1">Add another account</a>
+        </section>
 
 		<!-- sessions -->
 		<section class="mt-10 border-t border-rule pt-4">

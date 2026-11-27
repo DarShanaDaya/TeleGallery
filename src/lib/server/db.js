@@ -120,3 +120,15 @@ for (const [table, column, type] of [
 db.exec('CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);');
 
 export const nowIso = () => new Date().toISOString();
+
+// Existing share links remain public after migration.
+if (!db.prepare('PRAGMA table_info(shares)').all().some((c) => c.name === 'access_mode')) {
+    db.exec("ALTER TABLE shares ADD COLUMN access_mode TEXT NOT NULL DEFAULT 'anyone'");
+}
+db.exec(`CREATE TABLE IF NOT EXISTS share_requests (
+    share_id TEXT NOT NULL REFERENCES shares(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status TEXT NOT NULL CHECK(status IN ('pending','approved','denied')),
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (share_id, user_id)
+);`);

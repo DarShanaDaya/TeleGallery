@@ -1,0 +1,21 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'accounts-'));
+const auth = await import('../src/lib/server/auth.js');
+const first = auth.upsertUser({tgId:'account-one', firstName:'One'});
+const second = auth.upsertUser({tgId:'account-two', firstName:'Two'});
+const cookies = new Map();
+const event = { url:new URL('https://example.test/'), cookies: { get: (k) => cookies.get(k), set: (k,v) => cookies.set(k,v) } };
+test('saved sessions remain separate and revoked sessions cannot be switched to', () => {
+ const a = auth.createSession(first), b = auth.createSession(second);
+ auth.rememberAccount(event,a.id); cookies.set(auth.SESSION_COOKIE,a.id);
+ auth.rememberAccount(event,b.id); cookies.set(auth.SESSION_COOKIE,b.id);
+ assert.deepEqual(auth.browserAccounts(event).map(x => x.user.id),[second,first]);
+ auth.revokeSession(first,a.id);
+ assert.deepEqual(auth.browserAccounts(event).map(x => x.user.id),[second]);
+ auth.forgetAccount(event,b.id); cookies.delete(auth.SESSION_COOKIE);
+ assert.equal(auth.browserAccounts(event).length,0);
+});

@@ -3,6 +3,9 @@
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import { formatBytes, formatDate } from '#lib/format.js';
 	import { Download, FileQuestion, Lock, Copy, Check } from 'lucide-svelte';
+	import { invalidateAll } from '$app/navigation';
+	let requestError = $state('');
+	async function requestAccess() { const res = await fetch(`/s/${data.token}/request`, { method: 'POST' }); if (res.ok) await invalidateAll(); else requestError = 'Could not send request'; }
 
 	let { data } = $props();
 	let copied = $state(false);
@@ -28,7 +31,17 @@
 	</header>
 
 	<main class="mx-auto w-full max-w-[64rem] px-5 py-8">
-		{#if !file}
+		{#if data.access === 'signin' || data.access === 'request' || data.access === 'pending' || data.access === 'denied'}
+            <div class="border border-rule bg-paper-2 px-6 py-16 text-center">
+                <h1 class="font-display text-2xl">Access requires approval</h1>
+                {#if data.access === 'signin'}
+                    <p class="mt-3">Sign in to request access from the owner.</p>
+                    <a class="btn btn-primary mt-5" href={`/login?next=${encodeURIComponent(`/s/${data.token}`)}`}>Sign in</a>
+                {:else if data.access === 'pending'}<p class="mt-3">Your request is waiting for the owner.</p>
+                {:else}<p class="mt-3">{data.access === 'denied' ? 'Your request was denied or access was removed.' : 'Ask the owner for access.'}</p><button class="btn btn-primary mt-5" onclick={requestAccess}>Request access</button>{/if}
+                {#if requestError}<p class="text-danger">{requestError}</p>{/if}
+            </div>
+        {:else if !file}
 			<div class="border border-dashed border-rule-strong bg-paper-2/40 px-6 py-16 text-center">
 				<FileQuestion size={22} strokeWidth={1.3} class="mx-auto text-ink-3" />
 				<h1 class="mt-4 font-display text-2xl text-ink">This link has expired</h1>
@@ -52,14 +65,21 @@
 						{#if copied}<Check size={13} class="text-success" />{:else}<Copy size={13} />{/if}
 						{copied ? 'Copied' : 'Copy link'}
 					</button>
-					<a class="btn btn-primary h-9 px-3 text-[12px]" href={data.download} download={file.name}>
+					{#if file.kind !== 'folder'}<a class="btn btn-primary h-9 px-3 text-[12px]" href={data.download} download={file.name}>
 						<Download size={13} /> Download
-					</a>
+					</a>{/if}
 				</div>
 			</div>
 
 			<div class="mt-5">
-				{#if file.kind === 'image'}
+				{#if file.kind === 'folder'}
+                    <a class="text-accent text-sm" href={`/s/${data.token}`}>Shared folder root</a>
+                    {#each data.children as child}
+                        <a class="block border-b border-rule py-3" href={child.kind === 'folder' ? `/s/${data.token}?item=${encodeURIComponent(child.id)}` : `/s/${data.token}/file?item=${encodeURIComponent(child.id)}`}>
+                            {child.kind === 'folder' ? '📁' : '📄'} {child.name}
+                        </a>
+                    {:else}<p class="py-4 text-ink-3">This folder is empty.</p>{/each}
+                {:else if file.kind === 'image'}
 					<img
 						src={data.src}
 						alt={file.name}

@@ -1,6 +1,6 @@
 # TeleDrive — a Telegram-backed unlimited cloud drive
 
-A clone of [drive.kriztech.in](https://drive.kriztech.in/) built with **Node.js**, **SvelteKit**, **Svelte 5**, **Tailwind CSS 4** and **SQLite**. Users sign in with Telegram, and their files live as documents inside Telegram itself — so the drive is genuinely unlimited.
+Built with **Node.js**, **SvelteKit**, **Svelte 5**, **Tailwind CSS 4** and **SQLite**. Users sign in with Telegram, and their files live as documents inside Telegram itself — so the drive is genuinely unlimited.
 
 No PHP, no Python: one runtime for the UI and the server, one container to deploy.
 
