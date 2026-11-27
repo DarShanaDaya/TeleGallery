@@ -1,9 +1,11 @@
-import { getSessionUser, SESSION_COOKIE } from '#lib/server/auth.js';
+import { getSessionUser, SESSION_COOKIE, touchSession } from '#lib/server/auth.js';
 
 const PROTECTED = ['/drive'];
 
 export async function handle({ event, resolve }) {
-	event.locals.user = getSessionUser(event.cookies.get(SESSION_COOKIE));
+	const sessionId = event.cookies.get(SESSION_COOKIE);
+	event.locals.user = getSessionUser(sessionId);
+	if (event.locals.user) touchSession(sessionId);
 
 	if (PROTECTED.some((p) => event.url.pathname === p || event.url.pathname.startsWith(p + '/'))) {
 		if (!event.locals.user) {

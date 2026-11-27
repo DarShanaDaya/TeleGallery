@@ -13,7 +13,10 @@ function signIn(event, tgUser) {
 		photoUrl: tgUser.photo_url ?? null,
 		language: tgUser.language_code ?? null
 	});
-	const { id, expires } = createSession(userId);
+	const { id, expires } = createSession(userId, {
+		userAgent: event.request.headers.get('user-agent'),
+		ip: event.getClientAddress?.() ?? null
+	});
 	event.cookies.set(SESSION_COOKIE, id, {
 		path: '/',
 		httpOnly: true,

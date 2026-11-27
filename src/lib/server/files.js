@@ -196,6 +196,9 @@ export function moveFile(userId, fileId, targetParentId) {
 }
 
 export function trashFile(userId, fileId) {
+	// Ownership check: without this, an unowned id reports a successful trash while
+	// touching nothing (the UPDATE is already scoped, the response was not).
+	if (!getFile(userId, fileId)) return { trashed: 0, error: 'Not found' };
 	const ids = [fileId, ...descendants(userId, fileId)];
 	const now = nowIso();
 	const stmt = db.prepare('UPDATE files SET deleted_at = ?, updated_at = ? WHERE id = ? AND user_id = ?');

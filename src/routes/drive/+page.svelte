@@ -6,6 +6,7 @@
 	import PromptModal from '#lib/components/PromptModal.svelte';
 	import PreviewModal from '#lib/components/PreviewModal.svelte';
 	import MoveModal from '#lib/components/MoveModal.svelte';
+	import ShareModal from '#lib/components/ShareModal.svelte';
 	import { drive, api } from '#lib/drive.svelte.js';
 	import { uploader } from '#lib/uploader.svelte.js';
 	import { formatBytes } from '#lib/format.js';
@@ -145,3 +146,4 @@
 <PromptModal />
 <PreviewModal />
 <MoveModal />
+<ShareModal />

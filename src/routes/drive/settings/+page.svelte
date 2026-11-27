@@ -2,10 +2,18 @@
 	import Topbar from '#lib/components/Topbar.svelte';
 	import { formatBytes } from '#lib/format.js';
 	import { toasts } from '#lib/toast.svelte.js';
-	import { LogOut, Copy, Send, ArrowUpRight } from 'lucide-svelte';
+	import { LogOut, Copy, Send, ArrowUpRight, Monitor, Smartphone, Trash2 } from 'lucide-svelte';
+import { invalidateAll } from '$app/navigation';
 
 	let { data } = $props();
 	let copied = $state('');
+
+	let sessions = $state(data.sessions || []);
+	let busySession = $state('');
+
+	$effect(() => {
+		sessions = data.sessions || [];
+	});
 
 	const user = $derived(data.user);
 	const usage = $derived(data.usage);
@@ -28,6 +36,41 @@
 		copied = key;
 		toasts.success('Copied');
 		setTimeout(() => (copied = ''), 1500);
+	}
+
+	async function revoke(id) {
+		busySession = id;
+		try {
+			await fetch('/api/sessions', {
+				method: 'DELETE',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ id })
+			});
+			sessions = sessions.filter((s) => s.id !== id);
+			toasts.success('Signed that device out');
+		} catch {
+			toasts.error('Could not sign that device out');
+		} finally {
+			busySession = '';
+		}
+	}
+
+	async function revokeAll() {
+		busySession = 'all';
+		try {
+			await fetch('/api/sessions', {
+				method: 'DELETE',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ all: true })
+			});
+			sessions = sessions.filter((s) => s.current);
+			toasts.success('Other devices signed out');
+			await invalidateAll();
+		} catch {
+			toasts.error('Could not sign other devices out');
+		} finally {
+			busySession = '';
+		}
 	}
 
 	async function logout() {
@@ -63,10 +106,63 @@
 			</div>
 		</section>
 
+		<!-- sessions -->
+		<section class="mt-10 border-t border-rule pt-4">
+			<div class="flex items-center justify-between">
+				<span class="label">02 — Active sessions</span>
+				{#if sessions.filter((s) => !s.current).length}
+					<button class="btn btn-quiet text-[11px]" onclick={revokeAll} disabled={busySession === 'all'}>
+						Sign out other devices
+					</button>
+				{/if}
+			</div>
+
+			<div class="mt-3 border-t border-rule">
+				{#each sessions as session (session.id)}
+					<div class="flex items-center gap-3 border-b border-rule py-2.5">
+						<span class="text-ink-3">
+							{#if /iPhone|iPad|Android/.test(session.device)}
+								<Smartphone size={14} strokeWidth={1.6} />
+							{:else}
+								<Monitor size={14} strokeWidth={1.6} />
+							{/if}
+						</span>
+						<div class="min-w-0 flex-1">
+							<p class="truncate text-[12.5px] text-ink">
+								{session.device}
+								{#if session.current}
+									<span class="ml-1.5 border border-accent/40 px-1 py-px font-mono text-[9px] uppercase tracking-[0.1em] text-accent">
+										this device
+									</span>
+								{/if}
+							</p>
+							<p class="label mt-0.5">
+								{session.ip || 'unknown ip'} · active {new Date(session.lastSeenAt).toLocaleDateString()}
+							</p>
+						</div>
+						{#if !session.current}
+							<button
+								class="btn btn-quiet text-[11px] text-danger"
+								onclick={() => revoke(session.id)}
+								disabled={busySession === session.id}
+								title="Sign out this device"
+							>
+								<Trash2 size={11} /> Sign out
+							</button>
+						{/if}
+					</div>
+				{/each}
+			</div>
+			<p class="mt-2 text-[11px] leading-5 text-ink-3">
+				Every browser that signs in with your Telegram account gets its own session. Revoking one does not
+				affect the others.
+			</p>
+		</section>
+
 		<!-- storage -->
 		<section class="mt-10 border-t border-rule pt-4">
 			<div class="flex items-center justify-between">
-				<span class="label">02 — Storage</span>
+				<span class="label">03 — Storage</span>
 				<span class="tag">unlimited</span>
 			</div>
 
@@ -102,7 +198,7 @@
 
 		<!-- telegram -->
 		<section class="mt-10 border-t border-rule pt-4">
-			<span class="label">03 — Telegram connection</span>
+			<span class="label">04 — Telegram connection</span>
 			<dl class="mt-3 border-t border-rule">
 				{#each [{ k: 'Bot', v: s.botUsername ? '@' + s.botUsername : 'not configured', copyable: s.botUsername }, { k: 'Storage chat', v: s.storageChat || 'your own account with the bot' }, { k: 'Mode', v: s.telegramEnabled ? 'telegram storage' : 'local demo storage' }] as row}
 					<div class="flex items-center justify-between gap-4 border-b border-rule py-2.5">
@@ -140,7 +236,7 @@
 
 		<!-- about -->
 		<section class="mt-10 border-t border-rule pt-4">
-			<span class="label">04 — About</span>
+			<span class="label">05 — About</span>
 			<p class="mt-3 max-w-[38rem] text-[12.5px] leading-6 text-ink-2">
 				{s.siteName} writes each file to your Telegram chat as one or more documents and keeps only an index —
 				chat id, message id, file id — in SQLite. Downloads are reassembled on demand and cached once.

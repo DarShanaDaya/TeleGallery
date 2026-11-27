@@ -3,6 +3,7 @@
 	import FileGrid from '#lib/components/FileGrid.svelte';
 	import PreviewModal from '#lib/components/PreviewModal.svelte';
 	import MoveModal from '#lib/components/MoveModal.svelte';
+	import ShareModal from '#lib/components/ShareModal.svelte';
 	import { goto } from '$app/navigation';
 	import { Search } from 'lucide-svelte';
 
@@ -41,3 +42,4 @@
 </div>
 <PreviewModal />
 <MoveModal />
+<ShareModal />

@@ -32,10 +32,13 @@ export async function DELETE(event) {
 	const permanent = event.url.searchParams.get('permanent') === '1';
 	try {
 		if (permanent) {
+			if (!getFile(user.id, event.params.id)) return json({ error: 'Not found' }, 404);
 			purgeFile(user.id, event.params.id);
 			return json({ ok: true, purged: true });
 		}
-		return json(trashFile(user.id, event.params.id));
+		const result = trashFile(user.id, event.params.id);
+		if (!result.trashed) return json({ error: 'Not found' }, 404);
+		return json(result);
 	} catch (err) {
 		return json({ error: err.message }, 400);
 	}

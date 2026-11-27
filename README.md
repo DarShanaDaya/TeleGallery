@@ -19,6 +19,10 @@ Landing page  →  Login with Telegram  →  File manager  →  Files live in Te
 | **Preview** | Images, video, audio and PDFs preview inline. |
 | **Dashboard** | Storage usage, per-type breakdown, Telegram connection status, drag-and-drop uploads with live progress. |
 | **Demo mode** | Works — and stores files locally — before you even create a bot. |
+| **Multiple sessions** | Every device gets its own session. Settings lists them with device, IP and last activity, and you can sign one out — or all others — without touching the rest. |
+| **Streamable video** | Proper RFC 7233 ranges: `206` with `Content-Range`, `416` when unsatisfiable, and `HEAD` for metadata. Seeking works in browsers and `ffmpeg`. |
+| **Direct links** | Share a file with an expiring, revocable, unguessable token (`/s/<token>`) — no sign-in needed to stream or download. |
+| **Downloads & save a copy** | Attachment downloads, plus "Save a copy" which re-encodes the filename server-side. |
 | **Two palettes** | Light "paper" and a hand-tuned "ink" dark theme, toggled in the UI and remembered. Set before first paint, so no flash. |
 
 ## Quick start
@@ -115,6 +119,18 @@ src/
 ```
 
 A file is one row in `files` plus one row per chunk in `parts` (Telegram chat id, message id, file id). On download the parts are fetched from Telegram (and cached on disk) and piped to the client in order.
+
+## Sessions, sharing and streaming
+
+**Sessions.** A row per device in `sessions` (user agent, IP, last seen). `GET /api/sessions` lists them, `DELETE /api/sessions` with `{ id }` revokes one or `{ all: true }` keeps only the caller. Revocation is scoped by `user_id`, so an id belonging to someone else is inert.
+
+**Share links.** `POST /api/files/:id/shares` with `{ days }` (0 = never) returns a token; `/s/<token>` is the public page and `/s/<token>/file` the raw bytes. Tokens are 24 random bytes (base64url). This is a capability URL: anyone with it can read the file, so treat it like a password and revoke when done. Links stop working when revoked, expired, or when the file is trashed.
+
+**Streaming.** `streamFile()` parses `Range` via `parseRange()` in `naming.js` and answers `206`/`416`/`200` per RFC 7233, with `HEAD` handled without touching storage. Telegram chunks are cached to disk on first read, so a second seek costs nothing.
+
+**A note on the Bot API ceiling.** Public `api.telegram.org` refuses `getFile` above 20 MB, so files past that are assembled chunk by chunk through this server. Point `TELEGRAM_API_BASE` at a self-hosted Bot API server and the ceiling goes away (and a single-chunk file can be redirected straight to Telegram's CDN, which `download.js` already supports via `directTelegramUrl`).
+
+> **Demo accounts are per-visitor.** Each demo sign-in creates a unique throwaway account, so two people clicking "Try the demo" never see each other's files. Set `ALLOW_DEMO_LOGIN=false` in production.
 
 ## Testing
 

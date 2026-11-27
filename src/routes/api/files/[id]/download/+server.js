@@ -3,7 +3,7 @@ import { db } from '#lib/server/db.js';
 import { streamFile } from '#lib/server/download.js';
 import { decodeInlineFilename } from '#lib/server/naming.js';
 
-export async function GET(event) {
+async function handle(event) {
 	const { user, error } = requireUser(event);
 	if (error) return error;
 	const fileId = event.params.id;
@@ -23,3 +23,6 @@ export async function GET(event) {
 	if (!res) return json({ error: 'File has no stored content' }, 404);
 	return res;
 }
+
+export const GET = handle;
+export const HEAD = handle;

@@ -27,8 +27,22 @@ CREATE TABLE IF NOT EXISTS sessions (
 	id TEXT PRIMARY KEY,
 	user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 	created_at TEXT NOT NULL,
-	expires_at TEXT NOT NULL
+	expires_at TEXT NOT NULL,
+	user_agent TEXT,
+	ip TEXT,
+	last_seen_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS shares (
+	id TEXT PRIMARY KEY,
+	token TEXT NOT NULL UNIQUE,
+	file_id TEXT NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+	user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+	created_at TEXT NOT NULL,
+	expires_at TEXT,
+	views INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_shares_file ON shares(file_id);
 
 CREATE TABLE IF NOT EXISTS files (
 	id TEXT PRIMARY KEY,
@@ -61,5 +75,18 @@ CREATE INDEX IF NOT EXISTS idx_files_deleted ON files(user_id, deleted_at);
 CREATE INDEX IF NOT EXISTS idx_parts_file ON parts(file_id, idx);
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 `);
+
+// Additive migrations: older databases won't have the session metadata columns.
+for (const [table, column, type] of [
+	['sessions', 'user_agent', 'TEXT'],
+	['sessions', 'ip', 'TEXT'],
+	['sessions', 'last_seen_at', 'TEXT'],
+	['files', 'mime_hint', 'TEXT']
+]) {
+	const columns = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+	if (!columns.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+}
+
+db.exec('CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);');
 
 export const nowIso = () => new Date().toISOString();

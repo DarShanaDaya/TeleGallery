@@ -3,44 +3,51 @@ import path from 'node:path';
 import { Readable } from 'node:stream';
 import { partsOf } from './files.js';
 import { cacheChunk } from './telegram.js';
-import { BLOB_DIR } from './config.js';
-import { assertPathInside } from './naming.js';
+import { BLOB_DIR, STORAGE_CHAT_ID } from './config.js';
+import { assertPathInside, parseRange } from './naming.js';
 
 /**
- * Stream a file back to the client part by part. Telegram chunks are cached on disk on
- * first access, which makes range requests (video seeking) cheap afterwards.
+ * Stream a file back to the client part by part.
+ *
+ * Range handling follows RFC 7233 closely enough for browsers and ffmpeg:
+ * 206 for a valid partial request, 416 + Content-Range for an unsatisfiable one,
+ * 200 with the full body otherwise. `HEAD` returns the same headers and no body,
+ * which is what makes native video seeking work.
  */
 export async function streamFile(event, fileRow, { inline = false } = {}) {
 	const parts = partsOf(fileRow.id);
 	if (!parts.length) return null;
 
-	const filename = encodeURIComponent(fileRow.name);
 	const total = parts.reduce((s, p) => s + p.size, 0);
 	const mime = fileRow.mime || 'application/octet-stream';
+	const method = event.request.method;
+	const filename = encodeURIComponent(fileRow.name);
 
-	let start = 0;
-	let end = total - 1;
-	let partial = false;
-	const range = event.request.headers.get('range');
-	if (range) {
-		const m = /bytes=(\d*)-(\d*)/.exec(range);
-		if (m) {
-			start = m[1] ? Number(m[1]) : 0;
-			end = m[2] ? Math.min(Number(m[2]), total - 1) : total - 1;
-			if (start > end) start = 0;
-			partial = true;
-		}
+	const range = parseRange(event.request.headers.get('range'), total);
+
+	if (range?.unsatisfiable) {
+		return new Response(null, {
+			status: 416,
+			headers: { 'content-range': `bytes */${total}`, 'accept-ranges': 'bytes' }
+		});
 	}
 
+	const start = range ? range.start : 0;
+	const end = range ? range.end : total - 1;
 	const headers = new Headers({
 		'content-type': mime,
-		'content-length': String(end - start + 1),
+		'content-length': String(total === 0 ? 0 : end - start + 1),
 		'accept-ranges': 'bytes',
 		'cache-control': 'private, max-age=3600',
 		'content-disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${filename}`,
 		'x-content-type-options': 'nosniff'
 	});
-	if (partial) headers.set('content-range', `bytes ${start}-${end}/${total}`);
+	if (range) headers.set('content-range', `bytes ${start}-${end}/${total}`);
+
+	// HEAD: headers only. Never touch storage.
+	if (method === 'HEAD') {
+		return new Response(null, { status: range ? 206 : 200, headers });
+	}
 
 	async function* generate() {
 		let offset = 0;
@@ -66,9 +73,27 @@ export async function streamFile(event, fileRow, { inline = false } = {}) {
 	}
 
 	return new Response(Readable.toWeb(Readable.from(generate())), {
-		status: partial ? 206 : 200,
+		status: range ? 206 : 200,
 		headers
 	});
+}
+
+/**
+ * Telegram can serve a file directly when the whole thing lives in one chunk and we
+ * have a bot token — the browser then streams from Telegram's CDN instead of through
+ * this server. Returns null when that shortcut isn't available.
+ */
+export async function directTelegramUrl(fileRow, { getFilePath }) {
+	if (!STORAGE_CHAT_ID) return null;
+	const parts = partsOf(fileRow.id);
+	if (parts.length !== 1) return null;
+	const part = parts[0];
+	if (!part.tg_file_id || part.blob_path) return null;
+	try {
+		return await getFilePath(part.tg_file_id);
+	} catch {
+		return null;
+	}
 }
 
 async function resolvePartPath(part, fileId) {

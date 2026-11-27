@@ -129,3 +129,28 @@ test('breadcrumbs walks from the root down to the current folder', () => {
 		['My Drive', 'A', 'B']
 	);
 });
+
+test('trashing a file owned by someone else reports nothing trashed', () => {
+	const otherId = Number(
+		db
+			.prepare(`INSERT INTO users (tg_id, first_name, is_demo, created_at) VALUES (?,?,1,?)`)
+			.run(`other-${Math.random()}`, 'Other', new Date().toISOString()).lastInsertRowid
+	);
+	const victimFile = addFile('not-yours.txt');
+	const result = files.trashFile(otherId, victimFile);
+
+	assert.equal(result.trashed, 0);
+	assert.equal(files.getFile(userId, victimFile).deletedAt, null, 'the file must be untouched');
+});
+
+test('restoring someone else’s trashed file is refused', () => {
+	const otherId = Number(
+		db
+			.prepare(`INSERT INTO users (tg_id, first_name, is_demo, created_at) VALUES (?,?,1,?)`)
+			.run(`other2-${Math.random()}`, 'Other', new Date().toISOString()).lastInsertRowid
+	);
+	const trashed = addFile('mine-trashed.txt');
+	files.trashFile(userId, trashed);
+	assert.throws(() => files.restoreFile(otherId, trashed), /not found/i);
+	assert.notEqual(files.getFile(userId, trashed).deletedAt, null, 'still trashed');
+});

@@ -1,7 +1,7 @@
 <script>
 	import { drive, api } from '#lib/drive.svelte.js';
 	import { toasts } from '#lib/toast.svelte.js';
-	import { Download, PencilLine, Star, StarOff, FolderInput, Trash2, RotateCcw, Trash, Eye } from 'lucide-svelte';
+	import { Download, PencilLine, Star, StarOff, FolderInput, Trash2, RotateCcw, Trash, Eye, Link2 } from 'lucide-svelte';
 
 	let { file, onClose } = $props();
 
@@ -56,6 +56,17 @@
 			<a class="menu-item" role="menuitem" href={`/api/files/${file.id}/download`}>
 				<Download size={13} /> Download
 			</a>
+			<a
+				class="menu-item"
+				role="menuitem"
+				href={`/api/files/${file.id}/download?name=${encodeURIComponent(file.name)}`}
+				download={file.name}
+			>
+				<Download size={13} /> Save a copy
+			</a>
+			<button class="menu-item" role="menuitem" onclick={() => (onClose?.(), drive.openShare(file))}>
+				<Link2 size={13} /> Share link
+			</button>
 		{/if}
 		<button class="menu-item" role="menuitem" onclick={() => (onClose?.(), drive.rename(file))}>
 			<PencilLine size={13} /> Rename

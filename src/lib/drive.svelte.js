@@ -10,6 +10,7 @@ class DriveStore {
 	prompt = $state(null);
 	preview = $state(null);
 	move = $state(null);
+	share = $state(null);
 	sidebarOpen = $state(false);
 
 	refresh() {
@@ -44,6 +45,10 @@ class DriveStore {
 
 	openMove(file) {
 		this.move = file;
+	}
+
+	openShare(file) {
+		this.share = file;
 	}
 }
 

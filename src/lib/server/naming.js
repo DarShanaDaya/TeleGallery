@@ -41,3 +41,32 @@ function safeDecode(value) {
 		return value;
 	}
 }
+
+/**
+ * Parse a single-range `Range: bytes=…` header against a known total size.
+ * Returns { start, end } (inclusive), { unsatisfiable: true }, or null when the
+ * header is absent/malformed/should be ignored. Multi-range requests are treated
+ * as a full response — we never emit multipart/byteranges.
+ */
+export function parseRange(header, total) {
+	if (!header || typeof header !== 'string' || total <= 0) return null;
+	const match = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
+	if (!match) return null;
+	const [, rawStart, rawEnd] = match;
+	if (!rawStart && !rawEnd) return null;
+
+	// suffix form: bytes=-N → the last N bytes
+	if (!rawStart) {
+		const suffix = Number(rawEnd);
+		if (!Number.isFinite(suffix) || suffix <= 0) return null;
+		return { start: Math.max(0, total - suffix), end: total - 1 };
+	}
+
+	const start = Number(rawStart);
+	if (!Number.isFinite(start) || start >= total) return { unsatisfiable: true };
+	let end = rawEnd ? Number(rawEnd) : total - 1;
+	if (!Number.isFinite(end)) end = total - 1;
+	end = Math.min(end, total - 1);
+	if (end < start) return { unsatisfiable: true };
+	return { start, end };
+}

@@ -3,6 +3,7 @@
 	import FileGrid from '#lib/components/FileGrid.svelte';
 	import PreviewModal from '#lib/components/PreviewModal.svelte';
 	import MoveModal from '#lib/components/MoveModal.svelte';
+	import ShareModal from '#lib/components/ShareModal.svelte';
 	import { api } from '#lib/drive.svelte.js';
 	import { toasts } from '#lib/toast.svelte.js';
 	import { invalidateAll } from '$app/navigation';
@@ -53,3 +54,4 @@
 </div>
 <PreviewModal />
 <MoveModal />
+<ShareModal />

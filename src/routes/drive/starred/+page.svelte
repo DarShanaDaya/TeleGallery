@@ -3,6 +3,7 @@
 	import FileGrid from '#lib/components/FileGrid.svelte';
 	import PreviewModal from '#lib/components/PreviewModal.svelte';
 	import MoveModal from '#lib/components/MoveModal.svelte';
+	import ShareModal from '#lib/components/ShareModal.svelte';
 	import PromptModal from '#lib/components/PromptModal.svelte';
 	import { goto } from '$app/navigation';
 	import { Star } from 'lucide-svelte';
@@ -35,3 +36,4 @@
 <PromptModal />
 <PreviewModal />
 <MoveModal />
+<ShareModal />
