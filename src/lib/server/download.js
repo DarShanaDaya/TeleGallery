@@ -4,6 +4,7 @@ import { Readable } from 'node:stream';
 import { partsOf } from './files.js';
 import { cacheChunk } from './telegram.js';
 import { BLOB_DIR } from './config.js';
+import { assertPathInside } from './naming.js';
 
 /**
  * Stream a file back to the client part by part. Telegram chunks are cached on disk on
@@ -71,7 +72,9 @@ export async function streamFile(event, fileRow, { inline = false } = {}) {
 }
 
 async function resolvePartPath(part, fileId) {
-	if (part.blob_path && fs.existsSync(part.blob_path)) return part.blob_path;
+	if (part.blob_path && assertPathInside(BLOB_DIR, part.blob_path) && fs.existsSync(part.blob_path)) {
+		return part.blob_path;
+	}
 	if (!part.tg_file_id) throw new Error('Part has no storage reference');
 	const dir = path.join(BLOB_DIR, fileId);
 	fs.mkdirSync(dir, { recursive: true });

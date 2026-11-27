@@ -116,6 +116,15 @@ src/
 
 A file is one row in `files` plus one row per chunk in `parts` (Telegram chat id, message id, file id). On download the parts are fetched from Telegram (and cached on disk) and piped to the client in order.
 
+## Testing
+
+```bash
+npm test        # unit tests (node:test) — auth signing, file tree, search, paths
+npm run smoke   # end-to-end against a running server: npm run dev, then npm run smoke
+```
+
+`tests/security.test.mjs` covers the Telegram HMAC verifier (valid, tampered, wrong secret, replay, missing hash), blob-path containment and the `Content-Disposition` filename parser. `tests/files.test.mjs` covers folder de-duplication, move-cycle rejection, trash cascade/restore, usage accounting and LIKE escaping in search. Both defects found this way — `createFolder` ignoring de-duplication, and `%`/`_` acting as SQL wildcards in search — have named regression tests that were verified to fail before the fix.
+
 ## Notes
 
 - Sessions are httpOnly cookies, 30 days, stored in SQLite — rotate them by deleting rows from `sessions`.

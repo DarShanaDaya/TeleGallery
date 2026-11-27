@@ -58,13 +58,13 @@ export function breadcrumbs(userId, parentId) {
 export function createFolder(userId, parentId, name) {
 	const clean = sanitizeName(name);
 	if (!clean) throw new Error('Folder name is required');
-	ensureUniqueName(userId, parentId, clean);
+	const unique = ensureUniqueName(userId, parentId, clean);
 	const id = newId();
 	const now = nowIso();
 	db.prepare(
 		`INSERT INTO files (id, user_id, parent_id, name, kind, size, mime, storage, created_at, updated_at)
 		 VALUES (?,?,?,?,'folder',0,NULL,'local',?,?)`
-	).run(id, userId, parentId ?? null, clean, now, now);
+	).run(id, userId, parentId ?? null, unique, now, now);
 	return getFile(userId, id);
 }
 
@@ -276,10 +276,11 @@ export function listRecent(userId, limit = 24) {
 }
 
 export function search(userId, query) {
-	const q = `%${String(query || '').replace(/[%_]/g, '')}%`;
+	const q = `%${String(query || '').replace(/[\\%_]/g, (m) => `\\${m}`)}%`;
 	return db
 		.prepare(
-			`SELECT * FROM files WHERE user_id = ? AND deleted_at IS NULL AND name LIKE ? COLLATE NOCASE
+			`SELECT * FROM files WHERE user_id = ? AND deleted_at IS NULL
+			 AND name LIKE ? ESCAPE '\\' COLLATE NOCASE
 			 ORDER BY kind = 'folder' DESC, name COLLATE NOCASE ASC LIMIT 200`
 		)
 		.all(userId, q)
